@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hotel Teściowej",
+  title: "Apartamenty Puerto",
   description: "Nowoczesny system rezerwacji apartamentów",
 };
 
