@@ -37,9 +37,9 @@ export default function RootLayout({
             
             {/* Dane kontaktowe po lewej */}
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 font-light">
-              <a href="tel:+48501644162" className="flex items-center gap-2 hover:text-white transition">
+              <a href="tel:+48609668134" className="flex items-center gap-2 hover:text-white transition">
                 <span>📞</span> 
-                <span>+48 501 644 162</span>
+                <span>+48 609 668 134</span>
               </a>
               <a href="mailto:kontakt@puerto-wladyslawowo.pl" className="flex items-center gap-2 hover:text-white transition">
                 <span>✉️</span> 
