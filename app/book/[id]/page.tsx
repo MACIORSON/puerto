@@ -59,7 +59,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         setError(error.message);
       } else {
         setApartment(data);
-        // Jeśli domyślna liczba gości jest większa niż pojemność, dostosowujemy ją
         if (data && defaultGuests > data.capacity) {
           setGuests(data.capacity);
         }
@@ -224,11 +223,11 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Termin pobytu</label>
             <div 
               onClick={() => setIsCalendarOpen(true)}
-              className="w-full border border-stone-200 rounded-2xl p-4 text-sm bg-stone-50/50 cursor-pointer flex justify-between items-center hover:border-stone-400 transition"
+              className="w-full border border-stone-200 rounded-2xl p-4 text-sm bg-white cursor-pointer flex justify-between items-center hover:border-stone-400 transition"
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg">📅</span>
-                <span className={`font-bold ${!checkIn || !checkOut ? 'text-stone-400 font-normal' : 'text-stone-800'}`}>
+                <span className={`font-bold ${!checkIn || !checkOut ? 'text-stone-400 font-normal' : 'text-stone-900'}`}>
                   {checkIn && checkOut 
                     ? `${checkIn} → ${checkOut} (${nights} nocy)` 
                     : 'Proszę wybrać datę pobytu'}
@@ -285,7 +284,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                     const isEnd = dateStr === checkOut;
                     const isInRange = checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
 
-                    let bgClass = "hover:bg-stone-100";
+                    let bgClass = "hover:bg-stone-100 text-stone-800";
                     if (isStart || isEnd) bgClass = "bg-[#D4A373] text-white font-bold rounded-xl";
                     else if (isInRange) bgClass = "bg-[#D4A373]/20 text-stone-900";
 
@@ -313,28 +312,28 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             )}
           </div>
 
-          {/* LICZBA GOŚCI (Z LIMITEM POJEMNOŚCI APARTAMENTU) */}
+          {/* LICZBA GOŚCI */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Liczba gości</label>
-            <div className="flex items-center justify-between border border-stone-200 rounded-2xl p-3.5 bg-stone-50/50">
+            <div className="flex items-center justify-between border border-stone-200 rounded-2xl p-3.5 bg-white">
               <span className="text-sm font-medium text-stone-800">Goście (maks. {apartment.capacity})</span>
               <div className="flex items-center gap-4">
                 <button 
                   type="button" 
                   onClick={() => setGuests(Math.max(1, guests - 1))}
-                  className="w-8 h-8 rounded-full bg-white border border-stone-200 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm"
+                  className="w-8 h-8 rounded-full bg-white border border-stone-200 text-stone-900 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm cursor-pointer"
                 >-</button>
-                <span className="font-bold text-sm w-4 text-center">{guests}</span>
+                <span className="font-bold text-stone-900 text-sm w-4 text-center">{guests}</span>
                 <button 
                   type="button" 
                   onClick={handleIncreaseGuests}
-                  className="w-8 h-8 rounded-full bg-white border border-stone-200 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm"
+                  className="w-8 h-8 rounded-full bg-white border border-stone-200 text-stone-900 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm cursor-pointer"
                 >+</button>
               </div>
             </div>
           </div>
 
-          {/* DANE KONTAKTOWE GOŚCIA */}
+          {/* DANE KONTAKTOWE GOŚCIA - POPRAWIONE TŁO I TEKST */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Imię i nazwisko</label>
@@ -343,7 +342,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 placeholder="Jan Kowalski"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm outline-none focus:border-stone-900 bg-stone-50/50" 
+                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm text-stone-900 bg-white outline-none focus:border-stone-900" 
                 required 
               />
             </div>
@@ -354,7 +353,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 placeholder="jan@example.com"
                 value={guestEmail}
                 onChange={(e) => setGuestEmail(e.target.value)}
-                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm outline-none focus:border-stone-900 bg-stone-50/50" 
+                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm text-stone-900 bg-white outline-none focus:border-stone-900" 
                 required 
               />
             </div>
