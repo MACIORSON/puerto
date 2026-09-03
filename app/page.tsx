@@ -21,7 +21,8 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  // ZMIANA: Na początku żaden pokój nie jest rozwinięty (wartość null zamiast 0)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const roomImageCounts: Record<number, number> = {
     1: 11,
