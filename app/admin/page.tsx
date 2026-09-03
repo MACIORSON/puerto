@@ -17,12 +17,30 @@ export default function AdminPanel() {
   const [selectedApt, setSelectedApt] = useState('');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState(''); // Telefon
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guestsCount, setGuestsCount] = useState(2);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // PROSTE HASŁO DLA TEŚCIOWEJ (Możesz zmienić "1234" na cokolwiek chcesz)
+  // Automatyczne liczenie ceny przy zmianie dat lub apartamentu
+  useEffect(() => {
+    if (selectedApt && checkIn && checkOut && apartments.length > 0) {
+      const apt = apartments.find((a) => a.id === selectedApt);
+      if (apt) {
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        const diffTime = end.getTime() - start.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          setTotalPrice(diffDays * apt.price_per_night);
+        } else {
+          setTotalPrice(0);
+        }
+      }
+    }
+  }, [selectedApt, checkIn, checkOut, apartments]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (pin === '1234') {
@@ -35,13 +53,11 @@ export default function AdminPanel() {
 
   const fetchData = async () => {
     setLoading(true);
-    // Pobierz rezerwacje
     const { data: bookingsData } = await supabase
       .from('bookings')
       .select('*, apartments(name)')
       .order('check_in', { ascending: true });
 
-    // Pobierz apartamenty do formularza dodawania
     const { data: aptsData } = await supabase.from('apartments').select('*');
 
     if (bookingsData) setBookings(bookingsData);
@@ -52,7 +68,6 @@ export default function AdminPanel() {
     setLoading(false);
   };
 
-  // Usuwanie rezerwacji
   const handleDelete = async (id: string) => {
     if (confirm('Czy na pewno chcesz usunąć tę rezerwację?')) {
       const { error } = await supabase.from('bookings').delete().eq('id', id);
@@ -64,14 +79,14 @@ export default function AdminPanel() {
     }
   };
 
-  // Ręczne dodawanie rezerwacji przez teściową
   const handleAddBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     const { error } = await supabase.from('bookings').insert([
       {
         apartment_id: selectedApt,
         guest_name: guestName,
-        guest_email: guestEmail || 'rezerwacja_telefoniczna@puerto.pl',
+        guest_email: guestEmail || 'brak@email.pl',
+        guest_phone: guestPhone || 'Brak telefonu',
         check_in: checkIn,
         check_out: checkOut,
         guests: guestsCount,
@@ -86,6 +101,7 @@ export default function AdminPanel() {
       setShowAddModal(false);
       setGuestName('');
       setGuestEmail('');
+      setGuestPhone('');
       setCheckIn('');
       setCheckOut('');
       setTotalPrice(0);
@@ -93,7 +109,6 @@ export default function AdminPanel() {
     }
   };
 
-  // Ekran logowania PIN-em
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-stone-100 flex items-center justify-center px-4">
@@ -130,7 +145,6 @@ export default function AdminPanel() {
     <div className="min-h-screen bg-stone-50 text-stone-900 p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
         
-        {/* Górny pasek panelu */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 bg-white p-6 rounded-3xl shadow-sm border border-stone-200">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Panel Gospodarza</span>
@@ -152,7 +166,6 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Modal dodawania rezerwacji */}
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-stone-100">
@@ -174,7 +187,7 @@ export default function AdminPanel() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Imię i nazwisko gościa</label>
+                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Imię i nazwisko</label>
                     <input 
                       type="text" 
                       placeholder="Jan Kowalski" 
@@ -185,15 +198,27 @@ export default function AdminPanel() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">E-mail (opcjonalnie)</label>
+                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Telefon</label>
                     <input 
-                      type="email" 
-                      placeholder="jan@example.com" 
-                      value={guestEmail} 
-                      onChange={(e) => setGuestEmail(e.target.value)} 
+                      type="tel" 
+                      placeholder="+48 000 000 000" 
+                      value={guestPhone} 
+                      onChange={(e) => setGuestPhone(e.target.value)} 
                       className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none" 
+                      required
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-stone-500 mb-1">E-mail (opcjonalnie)</label>
+                  <input 
+                    type="email" 
+                    placeholder="jan@example.com" 
+                    value={guestEmail} 
+                    onChange={(e) => setGuestEmail(e.target.value)} 
+                    className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none" 
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -235,10 +260,9 @@ export default function AdminPanel() {
                     <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Cena całkowita (zł)</label>
                     <input 
                       type="number" 
-                      placeholder="np. 1200" 
                       value={totalPrice} 
                       onChange={(e) => setTotalPrice(Number(e.target.value))} 
-                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none" 
+                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none font-bold text-[#D4A373]" 
                       required 
                     />
                   </div>
@@ -264,7 +288,6 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* Lista rezerwacji */}
         <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
           <div className="p-6 border-b border-stone-100 flex justify-between items-center">
             <h2 className="font-serif font-bold text-lg text-stone-900">Aktualne rezerwacje w systemie</h2>
@@ -281,7 +304,7 @@ export default function AdminPanel() {
                 <thead>
                   <tr className="bg-stone-50 text-stone-400 text-xs uppercase tracking-wider border-b border-stone-100">
                     <th className="p-4 font-semibold">Apartament</th>
-                    <th className="p-4 font-semibold">Gość</th>
+                    <th className="p-4 font-semibold">Gość i Kontakt</th>
                     <th className="p-4 font-semibold">Termin pobytu</th>
                     <th className="p-4 font-semibold">Goście</th>
                     <th className="p-4 font-semibold">Kwota</th>
@@ -294,6 +317,7 @@ export default function AdminPanel() {
                       <td className="p-4 font-bold text-stone-900">{b.apartments?.name || 'Apartament'}</td>
                       <td className="p-4">
                         <div className="font-semibold text-stone-900">{b.guest_name}</div>
+                        <div className="text-xs text-stone-500">{b.guest_phone}</div>
                         <div className="text-xs text-stone-400">{b.guest_email}</div>
                       </td>
                       <td className="p-4">

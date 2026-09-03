@@ -25,6 +25,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState(''); // NOWE POLE: Telefon
   const [successMessage, setSuccessMessage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -160,6 +161,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         apartment_id: id,
         guest_name: guestName,
         guest_email: guestEmail,
+        guest_phone: guestPhone, // Zapis numeru telefonu w bazie
         check_in: checkIn,
         check_out: checkOut,
         guests: guests,
@@ -179,7 +181,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   if (loading) return <div className="p-20 text-center text-stone-500 font-medium">Ładowanie rezerwacji...</div>;
   if (error || !apartment) return <div className="p-20 text-center text-red-600 font-bold">Nie znaleziono apartamentu.</div>;
 
-  // NOWY EKRAN SUKCESU (Bilet)
   if (successMessage) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-stone-100 px-6 py-12">
@@ -188,7 +189,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             <div className="w-20 h-20 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-4xl backdrop-blur-md">✓</div>
             <h2 className="text-3xl font-serif font-bold mb-2">Zarezerwowane!</h2>
             <p className="opacity-90 text-sm font-medium">Pakuj walizki do Władysławowa, {guestName}.</p>
-            {/* Ozdobne wcięcia po bokach biletu */}
             <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-stone-100 rounded-full"></div>
             <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-stone-100 rounded-full"></div>
           </div>
@@ -239,13 +239,10 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           <span>&larr;</span> Powrót do oferty
         </Link>
 
-        {/* UKŁAD DWUKOLUMNOWY */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          {/* LEWA KOLUMNA: Informacje (Sticky) */}
           <div className="lg:col-span-5 lg:sticky lg:top-8 space-y-6">
             <div className="relative h-64 md:h-80 w-full rounded-3xl overflow-hidden shadow-lg border border-stone-100">
-              {/* Jeśli apartament ma URL obrazka to go używa, inaczej domyślny apt-1 */}
               <Image 
                 src={apartment.image_url || "/images/apt-1.jpg"} 
                 alt={apartment.name} 
@@ -284,13 +281,11 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
 
-          {/* PRAWA KOLUMNA: Formularz */}
           <div className="lg:col-span-7 bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl border border-stone-100">
             <h2 className="text-2xl font-serif font-bold text-stone-900 mb-8">Szczegóły rezerwacji</h2>
             
             <form onSubmit={handleSubmit} className="space-y-8">
               
-              {/* TERMIN */}
               <div className="relative" ref={calendarRef}>
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Wybierz daty</label>
                 <div 
@@ -298,7 +293,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                   className="w-full border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50 cursor-pointer flex justify-between items-center hover:border-stone-300 transition group"
                 >
                   <div className="flex items-center gap-4">
-                    {/* Ikona kalendarza */}
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition">
                       <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     </div>
@@ -354,7 +348,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 )}
               </div>
 
-              {/* GOŚCIE */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Kto przyjedzie?</label>
                 <div className="flex items-center justify-between border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50">
@@ -374,9 +367,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 </div>
               </div>
 
-              {/* DANE OSOBOWE */}
               <div className="space-y-5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">Twoje dane</label>
+                
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
                     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -390,6 +383,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                     required 
                   />
                 </div>
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
                     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -403,9 +397,24 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                     required 
                   />
                 </div>
+
+                {/* NOWE POLE: Telefon */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                    📞
+                  </div>
+                  <input 
+                    type="tel" 
+                    placeholder="Numer telefonu (np. +48 600 000 000)"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                    required 
+                  />
+                </div>
+
               </div>
 
-              {/* MOBILNE PODSUMOWANIE */}
               <div className="lg:hidden bg-stone-100 p-5 rounded-2xl flex justify-between items-center mt-6">
                 <span className="font-medium text-stone-600 text-sm">Razem do zapłaty</span>
                 <span className="font-extrabold text-stone-900 text-xl">{total} zł</span>
