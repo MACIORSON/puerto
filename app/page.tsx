@@ -112,7 +112,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 relative">
       
-      {/* Baner powitalny z logo zamiast napisu */}
+      {/* Baner powitalny z powiększonym logo */}
       <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
         <div className="absolute inset-0">
@@ -126,14 +126,14 @@ export default function Home() {
         </div>
         <div className="relative z-20 max-w-4xl mx-auto text-white">
           
-          {/* LOGO ZAMIAST TEKSTU */}
+          {/* POWIĘKSZONE LOGO */}
           <div className="mb-6 flex justify-center">
             <Image 
               src="/logo.png" 
               alt="Puerto Władysławowo" 
-              width={160} 
-              height={55} 
-              className="object-contain h-10 w-auto brightness-0 invert drop-shadow-md" 
+              width={240} 
+              height={85} 
+              className="object-contain h-16 md:h-20 w-auto brightness-0 invert drop-shadow-lg" 
             />
           </div>
 
