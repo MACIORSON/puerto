@@ -12,10 +12,7 @@ export default function AdminPanel() {
   const [apartments, setApartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Widok: 'list' (tabela) lub 'calendar' (kalendarze pokoi 1-9)
   const [activeTab, setActiveTab] = useState<'list' | 'calendar'>('calendar');
-
-  // Stan modala szczegółów rezerwacji po kliknięciu w kalendarzu
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
 
   // Stan do ręcznego dodawania rezerwacji
@@ -30,7 +27,6 @@ export default function AdminPanel() {
   const [guestsCount, setGuestsCount] = useState(2);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // Aktualny miesiąc w kalendarzu podglądu
   const todayDate = new Date();
   const [calYear, setCalYear] = useState(todayDate.getFullYear());
   const [calMonth, setCalMonth] = useState(todayDate.getMonth());
@@ -39,6 +35,28 @@ export default function AdminPanel() {
     "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", 
     "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
   ];
+
+  // Paleta ładnych, eleganckich kolorów dla różnych rezerwacji
+  const pastelColors = [
+    { bg: 'bg-amber-800 text-white', border: 'border-amber-900' },
+    { bg: 'bg-emerald-800 text-white', border: 'border-emerald-900' },
+    { bg: 'bg-sky-800 text-white', border: 'border-sky-900' },
+    { bg: 'bg-indigo-800 text-white', border: 'border-indigo-900' },
+    { bg: 'bg-rose-800 text-white', border: 'border-rose-900' },
+    { bg: 'bg-teal-800 text-white', border: 'border-teal-900' },
+    { bg: 'bg-purple-800 text-white', border: 'border-purple-900' },
+    { bg: 'bg-orange-800 text-white', border: 'border-orange-900' },
+  ];
+
+  // Przypisanie stałego koloru do ID rezerwacji
+  const getBookingColor = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % pastelColors.length;
+    return pastelColors[index];
+  };
 
   useEffect(() => {
     if (selectedApt && checkIn && checkOut && apartments.length > 0) {
@@ -142,7 +160,6 @@ export default function AdminPanel() {
     }
   };
 
-  // Pomocnicze do kalendarza dni miesiąca
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const daysInCurrentMonth = getDaysInMonth(calYear, calMonth);
 
@@ -198,7 +215,7 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Przełącznik widoków (Kalendarze vs Tabela) */}
+        {/* Przełącznik widoków */}
         <div className="flex gap-3 mb-8">
           <button 
             onClick={() => setActiveTab('calendar')}
@@ -214,7 +231,7 @@ export default function AdminPanel() {
           </button>
         </div>
 
-        {/* MODAL: Szczegóły rezerwacji po kliknięciu w kalendarzu */}
+        {/* MODAL: Szczegóły rezerwacji */}
         {selectedBookingDetails && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-[2rem] max-w-md w-full p-8 shadow-2xl border border-stone-100 relative">
@@ -336,11 +353,10 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* WIDOK 1: WIZUALNY KALENDARZ DLA KAŻDEGO POKOJU (1-9) */}
+        {/* WIDOK 1: POŁĄczony WIZUALNY KALENDARZ POKOI */}
         {activeTab === 'calendar' && (
           <div className="bg-white rounded-[2rem] shadow-sm border border-stone-200/80 p-6 md:p-8">
             
-            {/* Przełącznik miesięcy w kalendarzu */}
             <div className="flex justify-between items-center mb-8 bg-stone-50 p-4 rounded-2xl border border-stone-100">
               <button 
                 onClick={() => {
@@ -375,21 +391,26 @@ export default function AdminPanel() {
                           </span>
                           <span className="font-serif font-bold text-stone-900 text-sm">Pokój nr {roomNum}</span>
                         </div>
-                        <span className="text-[11px] text-stone-400 font-medium">Kliknij na zajęty dzień, aby zobaczyć gościa</span>
+                        <span className="text-[11px] text-stone-400 font-medium">Kliknij na ciąg rezerwacji, aby zobaczyć szczegóły</span>
                       </div>
 
-                      {/* Siatka dni miesiąca dla danego pokoju */}
-                      <div className="grid grid-cols-7 sm:grid-cols-11 md:grid-cols-16 lg:grid-cols-31 gap-1.5">
+                      {/* Siatka połączonych dni */}
+                      <div className="grid grid-cols-7 sm:grid-cols-11 md:grid-cols-16 lg:grid-cols-31 gap-1">
                         {Array.from({ length: daysInCurrentMonth }).map((_, i) => {
                           const day = i + 1;
                           const formattedDay = day < 10 ? `0${day}` : day;
                           const formattedMonth = (calMonth + 1) < 10 ? `0${calMonth + 1}` : calMonth + 1;
                           const dateStr = `${calYear}-${formattedMonth}-${formattedDay}`;
 
-                          // Sprawdzamy czy w tym dniu ten pokój ma rezerwację
                           const activeBooking = bookings.find((b) => {
                             return Number(b.room_number) === roomNum && dateStr >= b.check_in && dateStr < b.check_out;
                           });
+
+                          // Ustalamy czy to początek, środek czy koniec rezerwacji dla ładnego zaokrąglenia
+                          const isStart = activeBooking && dateStr === activeBooking.check_in;
+                          const isEnd = activeBooking && dateStr === new Date(new Date(activeBooking.check_out).getTime() - 86400000).toISOString().split('T')[0];
+
+                          const bookingStyle = activeBooking ? getBookingColor(activeBooking.id) : null;
 
                           return (
                             <div
@@ -397,16 +418,16 @@ export default function AdminPanel() {
                               onClick={() => {
                                 if (activeBooking) setSelectedBookingDetails(activeBooking);
                               }}
-                              className={`h-11 rounded-xl flex flex-col items-center justify-center text-xs transition relative group ${
+                              className={`h-11 flex flex-col items-center justify-center text-xs transition relative group ${
                                 activeBooking 
-                                  ? 'bg-stone-900 text-white font-bold shadow-sm cursor-pointer hover:bg-stone-800 ring-2 ring-[#D4A373]' 
-                                  : 'bg-white text-stone-600 border border-stone-200/60'
+                                  ? `${bookingStyle?.bg} font-bold shadow-xs cursor-pointer hover:opacity-90 ${isStart ? 'rounded-l-xl ml-0.5' : ''} ${isEnd ? 'rounded-r-xl mr-0.5' : ''}` 
+                                  : 'bg-white text-stone-500 border border-stone-200/60 rounded-xl'
                               }`}
                               title={activeBooking ? `${activeBooking.guest_name} (${activeBooking.check_in} — ${activeBooking.check_out})` : `Wolne: ${dateStr}`}
                             >
-                              <span className="text-[10px] opacity-60 font-normal">{day}</span>
-                              <span className="text-[11px] truncate px-1">
-                                {activeBooking ? activeBooking.guest_name.split(' ')[0] : '—'}
+                              <span className="text-[10px] opacity-70 font-normal">{day}</span>
+                              <span className="text-[10px] truncate px-1">
+                                {isStart ? activeBooking.guest_name.split(' ')[0] : ''}
                               </span>
                             </div>
                           );
@@ -471,7 +492,7 @@ export default function AdminPanel() {
                             </div>
                             <span className="text-stone-300">→</span>
                             <div>
-                              <span className="text-[10px] uppercase font-bold text-rose-600 block">Wymeldowanie</span>
+                              <span className="text-stone-400 uppercase font-bold text-rose-600 block">Wymeldowanie</span>
                               <span className="font-bold text-stone-900 text-xs">🔴 {b.check_out}</span>
                             </div>
                           </div>
