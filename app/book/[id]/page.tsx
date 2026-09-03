@@ -22,10 +22,12 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [checkIn, setCheckIn] = useState(defaultCheckIn);
   const [checkOut, setCheckOut] = useState(defaultCheckOut);
   const [guests, setGuests] = useState(defaultGuests);
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState<number>(1);
+  const [availableRooms, setAvailableRooms] = useState<number[]>([]);
 
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
-  const [guestPhone, setGuestPhone] = useState(''); // NOWE POLE: Telefon
+  const [guestPhone, setGuestPhone] = useState('');
   const [successMessage, setSuccessMessage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,18 +42,13 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const calendarRef = useRef<HTMLDivElement>(null);
 
+  // Ustalamy jakie numery pokoi odpowiadają danemu ID apartamentu z bazy
+  // Przyjmujemy podział: 
+  // Jeśli to ID pierwszego apartamentu -> pokoje 1, 4, 7
+  // Drugiego -> 2, 5, 8
+  // Trzeciego -> 3, 6, 9
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-        setIsCalendarOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    async function fetchApartment() {
+    async function fetchApartmentAndRooms() {
       const { data, error } = await supabase
         .from('apartments')
         .select('*')
@@ -68,8 +65,50 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       }
       setLoading(false);
     }
-    fetchApartment();
+    fetchApartmentAndRooms();
   }, [id, defaultGuests]);
+
+  // Sprawdzanie dostępnych numerów pokoi po zmianie dat
+  useEffect(() => {
+    async function checkAvailableRooms() {
+      if (!checkIn || !checkOut || !id) return;
+
+      // Pobieramy wszystkie apartamenty, żeby ustalić mapowanie (które ID to które pokoje)
+      const { data: allApts } = await supabase.from('apartments').select('id');
+      if (!allApts) return;
+
+      const aptIndex = allApts.findIndex((a) => a.id === id);
+      // Mapowanie: indeks 0 -> [1, 4, 7], indeks 1 -> [2, 5, 8], indeks 2 -> [3, 6, 9]
+      const possibleRoomsMap: Record<number, number[]> = {
+        0: [1, 4, 7],
+        1: [2, 5, 8],
+        2: [3, 6, 9]
+      };
+      const roomsForThisType = possibleRoomsMap[aptIndex] || [1, 2, 3];
+
+      // Pobieramy istniejące rezerwacje dla tego typu
+      const { data: existingBookings } = await supabase
+        .from('bookings')
+        .select('room_number, check_in, check_out')
+        .eq('apartment_id', id);
+
+      // Filtrujemy pokoje, które NIE mają kolizji w wybranym terminie
+      const freeRooms = roomsForThisType.filter((roomNum) => {
+        const roomBookings = existingBookings?.filter((b) => b.room_number === roomNum) || [];
+        const hasConflict = roomBookings.some((b) => {
+          return checkIn < b.check_out && checkOut > b.check_in;
+        });
+        return !hasConflict;
+      });
+
+      setAvailableRooms(freeRooms);
+      if (freeRooms.length > 0 && !freeRooms.includes(selectedRoomNumber)) {
+        setSelectedRoomNumber(freeRooms[0]);
+      }
+    }
+
+    checkAvailableRooms();
+  }, [checkIn, checkOut, id]);
 
   const handleIncreaseGuests = () => {
     if (apartment && guests >= apartment.capacity) {
@@ -97,7 +136,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   ];
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  
   const getFirstDayOfMonth = (year: number, month: number) => {
     let day = new Date(year, month, 1).getDay();
     return day === 0 ? 6 : day - 1;
@@ -145,7 +183,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkIn || !checkOut) {
-      alert('Proszę wybrać termin pobytu i kliknąć "Zatwierdź termin".');
+      alert('Proszę wybrać termin pobytu.');
       return;
     }
     
@@ -154,14 +192,20 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       return;
     }
 
+    if (availableRooms.length === 0) {
+      alert('Brak wolnych pokoi w tym terminie!');
+      return;
+    }
+
     setSubmitting(true);
 
     const { error: bookingError } = await supabase.from('bookings').insert([
       {
         apartment_id: id,
+        room_number: selectedRoomNumber,
         guest_name: guestName,
         guest_email: guestEmail,
-        guest_phone: guestPhone, // Zapis numeru telefonu w bazie
+        guest_phone: guestPhone,
         check_in: checkIn,
         check_out: checkOut,
         guests: guests,
@@ -188,7 +232,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           <div className="bg-[#D4A373] py-10 px-8 text-white relative">
             <div className="w-20 h-20 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-4xl backdrop-blur-md">✓</div>
             <h2 className="text-3xl font-serif font-bold mb-2">Zarezerwowane!</h2>
-            <p className="opacity-90 text-sm font-medium">Pakuj walizki do Władysławowa, {guestName}.</p>
+            <p className="opacity-90 text-sm font-medium">Pokój nr {selectedRoomNumber} jest twój, {guestName}.</p>
             <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-stone-100 rounded-full"></div>
             <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-stone-100 rounded-full"></div>
           </div>
@@ -199,8 +243,8 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-sm font-bold text-stone-900">{checkIn} <br/> {checkOut}</p>
               </div>
               <div>
-                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Goście</p>
-                <p className="text-sm font-bold text-stone-900">{guests} {guests === 1 ? 'osoba' : 'osoby'}</p>
+                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Numer pokoju</p>
+                <p className="text-sm font-bold text-[#D4A373]">Pokój nr {selectedRoomNumber}</p>
               </div>
             </div>
             <Link href="/" className="block w-full bg-stone-900 text-white font-medium py-4 rounded-2xl hover:bg-stone-800 transition text-sm">
@@ -250,9 +294,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 className="object-cover"
                 priority
               />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-stone-900 shadow-sm flex items-center gap-2">
-                <span className="text-yellow-500 text-sm">★</span> Nowość
-              </div>
             </div>
 
             <div>
@@ -293,8 +334,8 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                   className="w-full border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50 cursor-pointer flex justify-between items-center hover:border-stone-300 transition group"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition">
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      📅
                     </div>
                     <div>
                       <p className="text-xs text-stone-500 font-medium mb-0.5">{nights > 0 ? `${nights} nocy` : 'Kiedy przyjeżdżasz?'}</p>
@@ -348,13 +389,36 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 )}
               </div>
 
+              {/* WYBÓR KONKRETNEGO NUMERU POKOJU */}
+              {checkIn && checkOut && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Wybierz wolny pokój</label>
+                  {availableRooms.length === 0 ? (
+                    <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold">
+                      Brak wolnych pokoi tego typu w wybranym terminie. Proszę zmienić daty.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      {availableRooms.map((num) => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => setSelectedRoomNumber(num)}
+                          className={`py-3 rounded-2xl font-bold text-sm border-2 transition ${selectedRoomNumber === num ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-stone-50 text-stone-800 hover:border-stone-400'}`}
+                        >
+                          Pokój nr {num}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Kto przyjedzie?</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Liczba gości</label>
                 <div className="flex items-center justify-between border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm font-bold">👤</div>
                     <div>
                       <p className="text-xs text-stone-500 font-medium mb-0.5">Liczba osób</p>
                       <span className="font-bold text-stone-900">{guests} {guests === 1 ? 'Gość' : 'Gości'} (maks. {apartment.capacity})</span>
@@ -370,64 +434,38 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
               <div className="space-y-5">
                 <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">Twoje dane</label>
                 
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                  </div>
-                  <input 
-                    type="text" 
-                    placeholder="Imię i nazwisko"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
-                    required 
-                  />
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                  </div>
-                  <input 
-                    type="email" 
-                    placeholder="Adres e-mail"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
-                    required 
-                  />
-                </div>
-
-                {/* NOWE POLE: Telefon */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
-                    📞
-                  </div>
-                  <input 
-                    type="tel" 
-                    placeholder="Numer telefonu (np. +48 600 000 000)"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
-                    required 
-                  />
-                </div>
-
-              </div>
-
-              <div className="lg:hidden bg-stone-100 p-5 rounded-2xl flex justify-between items-center mt-6">
-                <span className="font-medium text-stone-600 text-sm">Razem do zapłaty</span>
-                <span className="font-extrabold text-stone-900 text-xl">{total} zł</span>
+                <input 
+                  type="text" 
+                  placeholder="Imię i nazwisko"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="w-full border-2 border-stone-100 rounded-2xl px-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                  required 
+                />
+                <input 
+                  type="email" 
+                  placeholder="Adres e-mail"
+                  value={guestEmail}
+                  onChange={(e) => setGuestEmail(e.target.value)}
+                  className="w-full border-2 border-stone-100 rounded-2xl px-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                  required 
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Numer telefonu"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  className="w-full border-2 border-stone-100 rounded-2xl px-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                  required 
+                />
               </div>
 
               <button 
                 type="submit" 
-                disabled={submitting}
-                className="w-full bg-[#D4A373] hover:bg-[#c39263] text-white font-bold py-5 rounded-2xl transition shadow-lg hover:shadow-xl text-base disabled:opacity-50 cursor-pointer flex justify-center items-center gap-2"
+                disabled={submitting || availableRooms.length === 0}
+                className="w-full bg-[#D4A373] hover:bg-[#c39263] text-white font-bold py-5 rounded-2xl transition shadow-lg text-base disabled:opacity-40 cursor-pointer flex justify-center items-center gap-2"
               >
-                {submitting ? 'Przetwarzanie...' : (
-                  <>Rezerwuję i płacę <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></>
-                )}
+                {submitting ? 'Przetwarzanie...' : 'Rezerwuję i płacę →'}
               </button>
             </form>
           </div>
