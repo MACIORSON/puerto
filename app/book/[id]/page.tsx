@@ -3,6 +3,7 @@
 import { supabase } from '../../supabase';
 import { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 
 export default function BookPage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,12 +31,10 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [showCapacityModal, setShowCapacityModal] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // AUTOMATYCZNE ROZPOZNAWANIE DZISIEJSZEJ DATY
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   
-  // Formatowanie dzisiejszej daty do porównań (YYYY-MM-DD)
   const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -104,9 +103,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   };
 
   const handlePrevMonth = () => {
-    // Zabezpieczenie przed cofaniem się poniżej obecnego miesiąca
     if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) return;
-    
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear(currentYear - 1);
@@ -129,7 +126,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     const formattedMonth = (currentMonth + 1) < 10 ? `0${currentMonth + 1}` : currentMonth + 1;
     const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
-    // Blokada kliknięcia w daty z przeszłości
     if (dateStr < todayFormatted) return;
 
     if (!checkIn || (checkIn && checkOut)) {
@@ -152,7 +148,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       return;
     }
     
-    // Ostateczne zabezpieczenie formularza
     if (checkIn < todayFormatted) {
       alert('Data zameldowania nie może być w przeszłości!');
       return;
@@ -181,19 +176,37 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     }
   };
 
-  if (loading) return <div className="p-20 text-center text-stone-500">Ładowanie rezerwacji...</div>;
+  if (loading) return <div className="p-20 text-center text-stone-500 font-medium">Ładowanie rezerwacji...</div>;
   if (error || !apartment) return <div className="p-20 text-center text-red-600 font-bold">Nie znaleziono apartamentu.</div>;
 
+  // NOWY EKRAN SUKCESU (Bilet)
   if (successMessage) {
     return (
-      <main className="min-h-[80vh] flex items-center justify-center bg-stone-50 px-6">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-stone-100 text-stone-900 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">✓</div>
-          <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">Rezerwacja przyjęta!</h2>
-          <p className="text-stone-600 mb-6 text-sm">Dziękujemy, {guestName}. Twoje zgłoszenie zostało zapisane w systemie.</p>
-          <Link href="/" className="inline-block bg-stone-900 text-white font-medium px-6 py-3 rounded-2xl hover:bg-stone-800 transition text-sm">
-            Powrót na stronę główną
-          </Link>
+      <main className="min-h-screen flex items-center justify-center bg-stone-100 px-6 py-12">
+        <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full text-center overflow-hidden border border-stone-200">
+          <div className="bg-[#D4A373] py-10 px-8 text-white relative">
+            <div className="w-20 h-20 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-4xl backdrop-blur-md">✓</div>
+            <h2 className="text-3xl font-serif font-bold mb-2">Zarezerwowane!</h2>
+            <p className="opacity-90 text-sm font-medium">Pakuj walizki do Władysławowa, {guestName}.</p>
+            {/* Ozdobne wcięcia po bokach biletu */}
+            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-stone-100 rounded-full"></div>
+            <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-stone-100 rounded-full"></div>
+          </div>
+          <div className="p-8 border-t-2 border-dashed border-stone-200 bg-white">
+            <div className="grid grid-cols-2 gap-4 text-left mb-8">
+              <div>
+                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Termin</p>
+                <p className="text-sm font-bold text-stone-900">{checkIn} <br/> {checkOut}</p>
+              </div>
+              <div>
+                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Goście</p>
+                <p className="text-sm font-bold text-stone-900">{guests} {guests === 1 ? 'osoba' : 'osoby'}</p>
+              </div>
+            </div>
+            <Link href="/" className="block w-full bg-stone-900 text-white font-medium py-4 rounded-2xl hover:bg-stone-800 transition text-sm">
+              Wróć na stronę główną
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -201,11 +214,10 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayIndex = getFirstDayOfMonth(currentYear, currentMonth);
-  // Sprawdzamy, czy jesteśmy w aktualnym miesiącu, aby zablokować strzałkę w lewo
   const isCurrentMonth = currentYear === today.getFullYear() && currentMonth === today.getMonth();
 
   return (
-    <main className="min-h-screen bg-stone-50 py-12 px-6 flex justify-center items-start relative">
+    <main className="min-h-screen bg-stone-50 py-12 md:py-20 px-4 sm:px-6">
       
       {showCapacityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -213,194 +225,204 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">i</div>
             <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">Większa liczba gości</h3>
             <p className="text-stone-600 text-sm mb-6 leading-relaxed">
-              Maksymalna liczba osób dla tego obiektu to {apartment.capacity}. W razie większej ilości gości prosimy o kontakt telefoniczny lub mailowy.
+              Maksymalna liczba osób dla tego obiektu to {apartment.capacity}. W razie większej ilości prosimy o kontakt.
             </p>
-            <button 
-              onClick={() => setShowCapacityModal(false)}
-              className="w-full bg-stone-900 text-white font-medium py-3 rounded-xl hover:bg-stone-800 transition text-sm cursor-pointer"
-            >
+            <button onClick={() => setShowCapacityModal(false)} className="w-full bg-stone-900 text-white font-medium py-3 rounded-xl hover:bg-stone-800 transition text-sm">
               Rozumiem
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-white p-8 md:p-10 rounded-3xl shadow-lg border border-stone-100 w-full max-w-xl">
-        <Link href="/" className="text-sm text-stone-500 hover:text-stone-900 mb-6 inline-block font-medium">&larr; Wróć do oferty</Link>
-        <h1 className="text-3xl font-serif font-extrabold text-stone-900 mb-1">Rezerwacja apartamentu</h1>
-        <h2 className="text-lg text-stone-600 font-medium mb-2">{apartment.name}</h2>
-        <p className="text-xs text-stone-500 mb-8">Maksymalnie do {apartment.capacity} osób</p>
-        
-        <form onSubmit={handleSubmit} className="grid gap-6">
+      <div className="max-w-6xl mx-auto">
+        <Link href="/" className="text-sm text-stone-500 hover:text-stone-900 mb-8 inline-flex items-center gap-2 font-medium transition">
+          <span>&larr;</span> Powrót do oferty
+        </Link>
+
+        {/* UKŁAD DWUKOLUMNOWY */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          <div className="relative" ref={calendarRef}>
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Termin pobytu</label>
-            <div 
-              onClick={() => setIsCalendarOpen(true)}
-              className="w-full border border-stone-200 rounded-2xl p-4 text-sm bg-white cursor-pointer flex justify-between items-center hover:border-stone-400 transition"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-lg">📅</span>
-                <span className={`font-bold ${!checkIn || !checkOut ? 'text-stone-400 font-normal' : 'text-stone-900'}`}>
-                  {checkIn && checkOut 
-                    ? `${checkIn} → ${checkOut} (${nights} nocy)` 
-                    : 'Proszę wybrać datę pobytu'}
-                </span>
+          {/* LEWA KOLUMNA: Informacje (Sticky) */}
+          <div className="lg:col-span-5 lg:sticky lg:top-8 space-y-6">
+            <div className="relative h-64 md:h-80 w-full rounded-3xl overflow-hidden shadow-lg border border-stone-100">
+              {/* Jeśli apartament ma URL obrazka to go używa, inaczej domyślny apt-1 */}
+              <Image 
+                src={apartment.image_url || "/images/apt-1.jpg"} 
+                alt={apartment.name} 
+                fill 
+                className="object-cover"
+                priority
+              />
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-bold text-stone-900 shadow-sm flex items-center gap-2">
+                <span className="text-yellow-500 text-sm">★</span> Nowość
               </div>
-              <span className="text-stone-400 text-xs">&#9660;</span>
             </div>
 
-            {isCalendarOpen && (
-              <div className="absolute top-full left-0 mt-2 bg-white text-stone-800 rounded-2xl shadow-2xl p-6 w-full z-40 border border-stone-200">
-                
-                <div className="flex justify-between items-center mb-6">
-                  <button 
-                    type="button" 
-                    onClick={handlePrevMonth}
-                    disabled={isCurrentMonth}
-                    className={`p-2 rounded-full font-bold transition ${isCurrentMonth ? 'text-stone-200 cursor-not-allowed' : 'hover:bg-stone-100 text-stone-600'}`}
-                  >
-                    &larr;
-                  </button>
-                  <div className="text-center">
-                    <h4 className="font-serif font-bold text-stone-900 text-base">
-                      {monthNames[currentMonth]} {currentYear}
-                    </h4>
-                    <p className="text-xs text-stone-500">
-                      {!checkIn ? 'Wybierz datę zameldowania' : !checkOut ? 'Wybierz datę wymeldowania' : 'Wybrano zakres terminów'}
-                    </p>
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={handleNextMonth}
-                    className="p-2 rounded-full hover:bg-stone-100 text-stone-600 font-bold transition"
-                  >
-                    &rarr;
-                  </button>
-                </div>
+            <div>
+              <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-2 block">Twój wybór</span>
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-3">{apartment.name}</h1>
+              <div className="flex flex-wrap gap-2 text-sm text-stone-600 font-medium mb-6">
+                <span className="bg-stone-200/50 px-3 py-1 rounded-lg">Do {apartment.capacity} osób</span>
+                <span className="bg-stone-200/50 px-3 py-1 rounded-lg">Wi-Fi</span>
+                <span className="bg-stone-200/50 px-3 py-1 rounded-lg">Parking</span>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-stone-500 mb-2 font-medium">
-                  <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span>
-                </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-200/60 hidden lg:block">
+              <div className="flex justify-between items-center mb-4 pb-4 border-b border-stone-100">
+                <span className="text-stone-600 font-medium">Cena za 1 dobę</span>
+                <span className="text-xl font-bold text-stone-900">{apartment.price_per_night} zł</span>
+              </div>
+              <div className="flex justify-between items-center mb-4 pb-4 border-b border-stone-100">
+                <span className="text-stone-600 font-medium">Liczba nocy</span>
+                <span className="text-lg font-bold text-stone-900">{nights}</span>
+              </div>
+              <div className="flex justify-between items-center text-lg">
+                <span className="font-bold text-stone-900">Razem do zapłaty</span>
+                <span className="text-2xl font-extrabold text-[#D4A373]">{total} zł</span>
+              </div>
+            </div>
+          </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center text-xs mb-6">
-                  {Array.from({ length: firstDayIndex }).map((_, i) => (
-                    <div key={`empty-${i}`} />
-                  ))}
-
-                  {Array.from({ length: daysInMonth }).map((_, i) => {
-                    const day = i + 1;
-                    const formattedDay = day < 10 ? `0${day}` : day;
-                    const formattedMonth = (currentMonth + 1) < 10 ? `0${currentMonth + 1}` : currentMonth + 1;
-                    const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
-                    
-                    const isPast = dateStr < todayFormatted;
-                    const isStart = dateStr === checkIn;
-                    const isEnd = dateStr === checkOut;
-                    const isInRange = checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
-
-                    let bgClass = "hover:bg-stone-100 text-stone-800 cursor-pointer";
-                    
-                    if (isPast) {
-                      bgClass = "text-stone-300 cursor-not-allowed bg-stone-50/50";
-                    } else if (isStart || isEnd) {
-                      bgClass = "bg-[#D4A373] text-white font-bold rounded-xl cursor-pointer";
-                    } else if (isInRange) {
-                      bgClass = "bg-[#D4A373]/20 text-stone-900 cursor-pointer";
-                    }
-
-                    return (
-                      <div 
-                        key={i} 
-                        onClick={() => handleDateClick(day)}
-                        className={`py-2.5 rounded-lg transition ${bgClass}`}
-                      >
-                        {day}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsCalendarOpen(false)}
-                  disabled={!checkIn || !checkOut}
-                  className="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 rounded-xl text-xs transition disabled:opacity-40 cursor-pointer"
+          {/* PRAWA KOLUMNA: Formularz */}
+          <div className="lg:col-span-7 bg-white p-6 md:p-10 rounded-[2.5rem] shadow-xl border border-stone-100">
+            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-8">Szczegóły rezerwacji</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-8">
+              
+              {/* TERMIN */}
+              <div className="relative" ref={calendarRef}>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Wybierz daty</label>
+                <div 
+                  onClick={() => setIsCalendarOpen(true)}
+                  className="w-full border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50 cursor-pointer flex justify-between items-center hover:border-stone-300 transition group"
                 >
-                  Zatwierdź termin
-                </button>
+                  <div className="flex items-center gap-4">
+                    {/* Ikona kalendarza */}
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-stone-500 font-medium mb-0.5">{nights > 0 ? `${nights} nocy` : 'Kiedy przyjeżdżasz?'}</p>
+                      <span className={`font-bold block ${!checkIn || !checkOut ? 'text-stone-400 font-medium text-sm' : 'text-stone-900 text-base'}`}>
+                        {checkIn && checkOut ? `${checkIn}  —  ${checkOut}` : 'Wybierz termin z kalendarza'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-stone-400 text-xs">&#9660;</span>
+                </div>
+
+                {isCalendarOpen && (
+                  <div className="absolute top-full left-0 mt-3 bg-white text-stone-800 rounded-3xl shadow-2xl p-6 w-full z-40 border border-stone-100">
+                    <div className="flex justify-between items-center mb-6">
+                      <button type="button" onClick={handlePrevMonth} disabled={isCurrentMonth} className={`w-10 h-10 rounded-full font-bold flex items-center justify-center transition ${isCurrentMonth ? 'text-stone-200 cursor-not-allowed' : 'bg-stone-100 hover:bg-stone-200 text-stone-900'}`}>&larr;</button>
+                      <h4 className="font-serif font-bold text-stone-900 text-lg">{monthNames[currentMonth]} {currentYear}</h4>
+                      <button type="button" onClick={handleNextMonth} className="w-10 h-10 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-900 flex items-center justify-center font-bold transition">&rarr;</button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-stone-400 mb-3 font-bold uppercase tracking-wide">
+                      <span>Pn</span><span>Wt</span><span>Śr</span><span>Cz</span><span>Pt</span><span>So</span><span>Nd</span>
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 text-center text-sm font-medium mb-6">
+                      {Array.from({ length: firstDayIndex }).map((_, i) => <div key={`empty-${i}`} />)}
+                      {Array.from({ length: daysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const formattedDay = day < 10 ? `0${day}` : day;
+                        const formattedMonth = (currentMonth + 1) < 10 ? `0${currentMonth + 1}` : currentMonth + 1;
+                        const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
+                        
+                        const isPast = dateStr < todayFormatted;
+                        const isStart = dateStr === checkIn;
+                        const isEnd = dateStr === checkOut;
+                        const isInRange = checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
+
+                        let bgClass = "hover:bg-stone-100 text-stone-900 cursor-pointer";
+                        if (isPast) bgClass = "text-stone-300 cursor-not-allowed";
+                        else if (isStart || isEnd) bgClass = "bg-stone-900 text-white font-bold rounded-xl shadow-md cursor-pointer";
+                        else if (isInRange) bgClass = "bg-stone-100 text-stone-900 rounded-lg cursor-pointer";
+
+                        return (
+                          <div key={i} onClick={() => handleDateClick(day)} className={`py-3 rounded-xl transition ${bgClass}`}>
+                            {day}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={() => setIsCalendarOpen(false)} disabled={!checkIn || !checkOut} className="w-full bg-stone-900 hover:bg-stone-800 text-white font-bold py-4 rounded-xl text-sm transition disabled:opacity-40 cursor-pointer">
+                      Gotowe
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Liczba gości</label>
-            <div className="flex items-center justify-between border border-stone-200 rounded-2xl p-3.5 bg-white">
-              <span className="text-sm font-medium text-stone-800">Goście (maks. {apartment.capacity})</span>
-              <div className="flex items-center gap-4">
-                <button 
-                  type="button" 
-                  onClick={() => setGuests(Math.max(1, guests - 1))}
-                  className="w-8 h-8 rounded-full bg-white border border-stone-200 text-stone-900 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm cursor-pointer"
-                >-</button>
-                <span className="font-bold text-stone-900 text-sm w-4 text-center">{guests}</span>
-                <button 
-                  type="button" 
-                  onClick={handleIncreaseGuests}
-                  className="w-8 h-8 rounded-full bg-white border border-stone-200 text-stone-900 font-bold flex items-center justify-center hover:bg-stone-100 shadow-sm cursor-pointer"
-                >+</button>
+              {/* GOŚCIE */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Kto przyjedzie?</label>
+                <div className="flex items-center justify-between border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-stone-500 font-medium mb-0.5">Liczba osób</p>
+                      <span className="font-bold text-stone-900">{guests} {guests === 1 ? 'Gość' : 'Gości'} (maks. {apartment.capacity})</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white p-1 rounded-full shadow-sm border border-stone-100">
+                    <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="w-8 h-8 rounded-full hover:bg-stone-100 text-stone-900 font-bold flex items-center justify-center transition">-</button>
+                    <button type="button" onClick={handleIncreaseGuests} className="w-8 h-8 rounded-full hover:bg-stone-100 text-stone-900 font-bold flex items-center justify-center transition">+</button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Imię i nazwisko</label>
-              <input 
-                type="text" 
-                placeholder="Jan Kowalski"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm text-stone-900 bg-white outline-none focus:border-stone-900" 
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Adres e-mail</label>
-              <input 
-                type="email" 
-                placeholder="jan@example.com"
-                value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value)}
-                className="w-full border border-stone-200 rounded-2xl p-3.5 text-sm text-stone-900 bg-white outline-none focus:border-stone-900" 
-                required 
-              />
-            </div>
-          </div>
-          
-          <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200/60 space-y-3">
-            <div className="flex justify-between text-sm text-stone-600">
-              <span>Cena za 1 dobę:</span>
-              <span className="font-semibold text-stone-900">{apartment.price_per_night} zł</span>
-            </div>
-            <div className="flex justify-between text-sm text-stone-600">
-              <span>Liczba nocy:</span>
-              <span className="font-semibold text-stone-900">{nights}</span>
-            </div>
-            <div className="border-t border-stone-200 pt-3 flex justify-between items-center text-lg">
-              <span className="font-bold text-stone-900">Do zapłaty:</span>
-              <span className="font-extrabold text-stone-900">{total} zł</span>
-            </div>
-          </div>
+              {/* DANE OSOBOWE */}
+              <div className="space-y-5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-1">Twoje dane</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Imię i nazwisko"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                    required 
+                  />
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-stone-400">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                  </div>
+                  <input 
+                    type="email" 
+                    placeholder="Adres e-mail"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="w-full border-2 border-stone-100 rounded-2xl pl-12 pr-4 py-4 text-sm font-medium text-stone-900 bg-stone-50/50 outline-none focus:border-stone-900 focus:bg-white transition" 
+                    required 
+                  />
+                </div>
+              </div>
 
-          <button 
-            type="submit" 
-            disabled={submitting}
-            className="w-full bg-[#D4A373] hover:bg-[#c39263] text-stone-900 font-bold py-4 rounded-2xl transition shadow-sm text-sm disabled:opacity-50 cursor-pointer"
-          >
-            {submitting ? 'Zapisywanie...' : 'Potwierdź rezerwację'}
-          </button>
-        </form>
+              {/* MOBILNE PODSUMOWANIE */}
+              <div className="lg:hidden bg-stone-100 p-5 rounded-2xl flex justify-between items-center mt-6">
+                <span className="font-medium text-stone-600 text-sm">Razem do zapłaty</span>
+                <span className="font-extrabold text-stone-900 text-xl">{total} zł</span>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full bg-[#D4A373] hover:bg-[#c39263] text-white font-bold py-5 rounded-2xl transition shadow-lg hover:shadow-xl text-base disabled:opacity-50 cursor-pointer flex justify-center items-center gap-2"
+              >
+                {submitting ? 'Przetwarzanie...' : (
+                  <>Rezerwuję i płacę <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </main>
   );
