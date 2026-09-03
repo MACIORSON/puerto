@@ -21,7 +21,7 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Stan przechowujący ID obecnie rozwiniętej kategorii na stronie głównej
+  // Stan przechowujący ID obecnie rozwiniętej kategorii
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
 
   // Dokładna liczba zdjęć w poszczególnych folderach pokoi (1-9)
@@ -37,11 +37,14 @@ export default function Home() {
     9: 8,
   };
 
-  // Mapowanie indeksu kategorii (0, 1, 2) na przypisane im 3 numery pokoi
+  // Precyzyjne mapowanie kategorii z bazy na numery pokoi:
+  // Indeks 0 (np. Apartament Rodzinny) -> Pokoje 1, 4, 7
+  // Indeks 1 (np. Pokój dla Pary Deluxe) -> Pokoje 2, 5, 8
+  // Indeks 2 (np. Studio Compact) -> Pokoje 3, 6, 9
   const categoryRoomsMap: Record<number, number[]> = {
-    0: [1, 4, 7], // Kategoria 1 (np. Rodzinny) -> Pokoje 1, 4, 7
-    1: [2, 5, 8], // Kategoria 2 (np. Deluxe) -> Pokoje 2, 5, 8
-    2: [3, 6, 9], // Kategoria 3 (np. Studio) -> Pokoje 3, 6, 9
+    0: [1, 4, 7],
+    1: [2, 5, 8],
+    2: [3, 6, 9],
   };
 
   const getRoomImages = (roomNumber: number) => {
@@ -77,14 +80,14 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: aptData, error: aptError } = await supabase.from('apartments').select('*').order('price_per_night', { ascending: false });
+      // Pobieramy rodzaje z tabeli apartments
+      const { data: aptData, error: aptError } = await supabase.from('apartments').select('*');
       if (aptError) {
         setError(aptError.message);
       } else {
         setApartments(aptData || []);
         if (aptData && aptData.length > 0) {
-          // Domyślnie rozwijamy pierwszą kategorię
-          setExpandedCategoryId(aptData[0].id);
+          setExpandedCategoryId(aptData[0].id); // Domyślnie rozwijamy pierwszą kategorię
         }
       }
 
@@ -138,7 +141,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 relative">
       
-      {/* Baner powitalny */}
+      {/* Baner główny */}
       <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
         <div className="absolute inset-0">
@@ -201,13 +204,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GŁÓWNA SEKCJA: 3 KATEGORIE Z ROZWIJANYMI NUMERAMI POKOI */}
+      {/* GŁÓWNA SEKCJA: KATEGORIE Z ROZWIJANYMI NUMERAMI POKOI */}
       <section id="apartments" className="max-w-7xl mx-auto px-6 py-24 scroll-mt-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
-            Rodzaje pokoi i apartamentów
+            Nasze Apartamenty i Pokoje
           </h2>
-          <p className="text-stone-600 max-w-xl mx-auto">Wybierz kategorię, rozwiń ją i zobacz konkretne pokoje z przypisanymi do nich galeriami zdjęć.</p>
+          <p className="text-stone-600 max-w-xl mx-auto">Wybierz interesujący Cię rodzaj, rozwiń go i sprawdź dostępne numery pokoi (np. 1, 4, 7).</p>
         </div>
 
         {error && (
@@ -222,22 +225,20 @@ export default function Home() {
           <div className="space-y-10">
             {apartments?.map((cat, catIndex) => {
               const isExpanded = expandedCategoryId === cat.id;
-              // Przypisane 3 numery pokoi dla tej kategorii
               const roomNumbers = categoryRoomsMap[catIndex] || [1, 2, 3];
-              // Zdjęcie okładkowe kategorii to pierwsze zdjęcie pierwszego pokoju z tej grupy
               const firstRoomImages = getRoomImages(roomNumbers[0]);
 
               return (
                 <div key={cat.id} className="bg-white rounded-3xl shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300">
                   
-                  {/* Górny panel kategorii (Zawsze widoczny) */}
+                  {/* Nagłówek kategorii */}
                   <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-stone-50/50">
                     <div className="flex items-center gap-6">
                       <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-stone-200">
                         <Image src={firstRoomImages[0]} alt={cat.name} fill className="object-cover" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Kategoria główna</span>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Kategoria apartamentu</span>
                         <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">{cat.name}</h3>
                         <p className="text-stone-600 text-sm max-w-xl leading-relaxed">{cat.description}</p>
                       </div>
@@ -252,17 +253,17 @@ export default function Home() {
                         onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
                         className="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3.5 rounded-2xl transition shadow-sm text-sm cursor-pointer flex items-center gap-2"
                       >
-                        <span>{isExpanded ? 'Zwiń pokoje' : 'Wybierz pokój (3 dostępne)'}</span>
+                        <span>{isExpanded ? 'Zwiń pokoje' : `Wybierz pokój (pokoje nr ${roomNumbers.join(', ')})`}</span>
                         <span className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>↓</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Rozwijana lista 3 konkretnych numerów pokoi */}
+                  {/* Rozwijana lista konkretnych numerów pokoi (np. 1, 4, 7) */}
                   {isExpanded && (
                     <div className="p-6 md:p-8 border-t border-stone-100 bg-white">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-6">
-                        Wybierz konkretny numer pokoju w tej kategorii:
+                        Dostępne konkretne numery w tej kategorii:
                       </h4>
 
                       <div className="grid md:grid-cols-3 gap-6">
@@ -289,9 +290,9 @@ export default function Home() {
                                   onClick={() => { setSelectedApartment({ ...cat, roomNum, images: roomImages }); setActiveImageIndex(0); }}
                                   className="font-serif font-bold text-stone-900 text-base mb-1 hover:text-[#D4A373] transition cursor-pointer"
                                 >
-                                  Pokój nr {roomNum} — {cat.name}
+                                  Pokój nr {roomNum}
                                 </h5>
-                                <p className="text-stone-500 text-xs mb-4">Pełne wyposażenie, aneks kuchenny, łazienka.</p>
+                                <p className="text-stone-500 text-xs mb-4">Niezależny pokój z pełnym wyposażeniem i łazienką.</p>
                                 <div className="flex items-center justify-between pt-3 border-t border-stone-200/60">
                                   <span className="font-extrabold text-stone-900 text-sm">{cat.price_per_night} zł / doba</span>
                                   <Link 
