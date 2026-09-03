@@ -1,9 +1,32 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    
+    // Ustawienie początkowego stanu (w razie odświeżenia strony w połowie)
+    handleScroll();
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-xs">
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 py-1' 
+          : 'bg-transparent border-transparent py-4'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2">
           <Image 
@@ -14,10 +37,14 @@ export default function Navbar() {
             className="object-contain h-10 w-auto" 
           />
         </Link>
-        <div className="flex gap-6 text-sm font-medium text-gray-700">
-          <Link href="/" className="hover:text-stone-900 transition">Strona główna</Link>
-          <Link href="/about" className="hover:text-stone-900 transition">O nas</Link>
-          <Link href="/contact" className="hover:text-stone-900 transition">Kontakt</Link>
+        
+        {/* Kolor tekstu zmienia się z białego na ciemny podczas scrollowania */}
+        <div className={`flex gap-6 text-sm font-medium transition-colors duration-500 ${
+          isScrolled ? 'text-gray-700' : 'text-white drop-shadow-md'
+        }`}>
+          <Link href="/" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>Strona główna</Link>
+          <Link href="/about" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>O nas</Link>
+          <Link href="/contact" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>Kontakt</Link>
         </div>
       </div>
     </nav>
