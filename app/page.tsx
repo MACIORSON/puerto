@@ -126,7 +126,6 @@ export default function Home() {
         </div>
         <div className="relative z-20 max-w-4xl mx-auto text-white">
           
-          {/* POWIĘKSZONE LOGO */}
           <div className="mb-6 flex justify-center">
             <Image 
               src="/logo.png" 
@@ -314,7 +313,7 @@ export default function Home() {
                 <p className="text-stone-600 text-sm mb-6">Ocena „Wyjątkowy” przyznana przez zweryfikowanych wczasowiczów.</p>
               </div>
               <a 
-                href="https://www.booking.com/" 
+                href="https://www.booking.com/hotel/pl/puerto-wladyslawowo.pl.html#tab-reviews" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-blue-900 text-white font-medium py-3.5 rounded-2xl hover:bg-blue-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
@@ -342,7 +341,7 @@ export default function Home() {
                 <p className="text-stone-600 text-sm mb-6">Zobacz realne oceny oraz wizytówkę naszego obiektu w Google.</p>
               </div>
               <a 
-                href="https://www.google.com/maps" 
+                href="https://www.google.com/maps/place/Puerto+W%C5%82adys%C5%82awowo/@54.7986906,18.3888293,17z/data=!3m1!4b1!4m17!1m5!8m4!1e1!2s112377943502415156667!3m1!1e1!3m10!1s0x46fdb3004ca818bb:0x80990370f55ffc13!5m2!4m1!1i2!8m2!3d54.7986875!4d18.3914042!9m1!1b1!16s%2Fg%2F11xn94lj11?entry=ttu&g_ep=EgoyMDI2MDgzMS4wIKXMDSoASAFQAw%3D%3D" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-stone-900 text-white font-medium py-3.5 rounded-2xl hover:bg-stone-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
@@ -355,12 +354,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ROZBUDOWANA STOPKA */}
+      {/* ROZBUDOWANA STOPKA Z DUŻYM LOGO I IKONĄ FACEBOOKA */}
       <footer id="footer" className="bg-white border-t border-stone-200 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+            
             <div>
-              <span className="font-serif text-3xl font-bold text-stone-900 block mb-6">Puerto.</span>
+              <div className="mb-6">
+                <Image 
+                  src="/logo.png" 
+                  alt="Puerto Władysławowo" 
+                  width={180} 
+                  height={60} 
+                  className="object-contain h-14 w-auto" 
+                />
+              </div>
               <p className="text-sm text-stone-500 leading-relaxed max-w-sm">
                 Apartamenty Puerto to kameralne i luksusowe miejsce stworzone z myślą o Twoim idealnym wypoczynku we Władysławowie. Łączymy nadmorski klimat z najwyższym standardem wykończenia.
               </p>
@@ -389,13 +397,29 @@ export default function Home() {
                 <Link href="/" className="hover:text-stone-900 transition w-fit">Regulamin pobytu</Link>
               </div>
             </div>
+
           </div>
           
           <div className="border-t border-stone-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-400">
             <p>&copy; {new Date().getFullYear()} Apartamenty Puerto Władysławowo. Wszelkie prawa zastrzeżone.</p>
-            <div className="flex gap-4 mt-4 md:mt-0">
-              <span className="hover:text-stone-600 cursor-pointer transition">Facebook</span>
-              <span className="hover:text-stone-600 cursor-pointer transition">Instagram</span>
+            
+            <div className="flex items-center gap-4 mt-4 md:mt-0">
+              <a 
+                href="https://www.facebook.com/profile.php?id=61577936825974" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-80 transition"
+              >
+                <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-stone-200">
+                  <Image 
+                    src="/images/facebook.jpg" 
+                    alt="Facebook" 
+                    fill 
+                    className="object-cover" 
+                  />
+                </div>
+                <span className="text-stone-700 font-medium text-sm">Facebook</span>
+              </a>
             </div>
           </div>
         </div>
