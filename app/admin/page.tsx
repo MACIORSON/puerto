@@ -36,28 +36,6 @@ export default function AdminPanel() {
     "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
   ];
 
-  // Paleta ładnych, eleganckich kolorów dla różnych rezerwacji
-  const pastelColors = [
-    { bg: 'bg-amber-800 text-white', border: 'border-amber-900' },
-    { bg: 'bg-emerald-800 text-white', border: 'border-emerald-900' },
-    { bg: 'bg-sky-800 text-white', border: 'border-sky-900' },
-    { bg: 'bg-indigo-800 text-white', border: 'border-indigo-900' },
-    { bg: 'bg-rose-800 text-white', border: 'border-rose-900' },
-    { bg: 'bg-teal-800 text-white', border: 'border-teal-900' },
-    { bg: 'bg-purple-800 text-white', border: 'border-purple-900' },
-    { bg: 'bg-orange-800 text-white', border: 'border-orange-900' },
-  ];
-
-  // Przypisanie stałego koloru do ID rezerwacji
-  const getBookingColor = (id: string) => {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % pastelColors.length;
-    return pastelColors[index];
-  };
-
   useEffect(() => {
     if (selectedApt && checkIn && checkOut && apartments.length > 0) {
       const apt = apartments.find((a) => a.id === selectedApt);
@@ -353,7 +331,7 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* WIDOK 1: POŁĄczony WIZUALNY KALENDARZ POKOI */}
+        {/* WIDOK 1: POŁĄCZONY WIZUALNY KALENDARZ POKOI (JEDOLITY NIEBIESKI KOLOR) */}
         {activeTab === 'calendar' && (
           <div className="bg-white rounded-[2rem] shadow-sm border border-stone-200/80 p-6 md:p-8">
             
@@ -362,7 +340,7 @@ export default function AdminPanel() {
                 onClick={() => {
                   if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else { setCalMonth(calMonth - 1); }
                 }}
-                className="w-10 h-10 rounded-full bg-white shadow-sm font-bold flex items-center justify-center hover:bg-stone-100 transition"
+                className="w-10 h-10 rounded-full bg-white shadow-sm font-bold flex items-center justify-center hover:bg-stone-100 transition cursor-pointer"
               >
                 &larr;
               </button>
@@ -371,7 +349,7 @@ export default function AdminPanel() {
                 onClick={() => {
                   if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else { setCalMonth(calMonth + 1); }
                 }}
-                className="w-10 h-10 rounded-full bg-white shadow-sm font-bold flex items-center justify-center hover:bg-stone-100 transition"
+                className="w-10 h-10 rounded-full bg-white shadow-sm font-bold flex items-center justify-center hover:bg-stone-100 transition cursor-pointer"
               >
                 &rarr;
               </button>
@@ -391,10 +369,10 @@ export default function AdminPanel() {
                           </span>
                           <span className="font-serif font-bold text-stone-900 text-sm">Pokój nr {roomNum}</span>
                         </div>
-                        <span className="text-[11px] text-stone-400 font-medium">Kliknij na ciąg rezerwacji, aby zobaczyć szczegóły</span>
+                        <span className="text-[11px] text-stone-400 font-medium">Kliknij na połączony pas, aby zobaczyć szczegóły gościa</span>
                       </div>
 
-                      {/* Siatka połączonych dni */}
+                      {/* Siatka połączonych dni w kolorze niebieskim */}
                       <div className="grid grid-cols-7 sm:grid-cols-11 md:grid-cols-16 lg:grid-cols-31 gap-1">
                         {Array.from({ length: daysInCurrentMonth }).map((_, i) => {
                           const day = i + 1;
@@ -406,11 +384,8 @@ export default function AdminPanel() {
                             return Number(b.room_number) === roomNum && dateStr >= b.check_in && dateStr < b.check_out;
                           });
 
-                          // Ustalamy czy to początek, środek czy koniec rezerwacji dla ładnego zaokrąglenia
                           const isStart = activeBooking && dateStr === activeBooking.check_in;
                           const isEnd = activeBooking && dateStr === new Date(new Date(activeBooking.check_out).getTime() - 86400000).toISOString().split('T')[0];
-
-                          const bookingStyle = activeBooking ? getBookingColor(activeBooking.id) : null;
 
                           return (
                             <div
@@ -420,7 +395,7 @@ export default function AdminPanel() {
                               }}
                               className={`h-11 flex flex-col items-center justify-center text-xs transition relative group ${
                                 activeBooking 
-                                  ? `${bookingStyle?.bg} font-bold shadow-xs cursor-pointer hover:opacity-90 ${isStart ? 'rounded-l-xl ml-0.5' : ''} ${isEnd ? 'rounded-r-xl mr-0.5' : ''}` 
+                                  ? `bg-blue-600 text-white font-bold shadow-xs cursor-pointer hover:bg-blue-700 ${isStart ? 'rounded-l-xl ml-0.5' : ''} ${isEnd ? 'rounded-r-xl mr-0.5' : ''}` 
                                   : 'bg-white text-stone-500 border border-stone-200/60 rounded-xl'
                               }`}
                               title={activeBooking ? `${activeBooking.guest_name} (${activeBooking.check_in} — ${activeBooking.check_out})` : `Wolne: ${dateStr}`}
@@ -492,7 +467,7 @@ export default function AdminPanel() {
                             </div>
                             <span className="text-stone-300">→</span>
                             <div>
-                              <span className="text-stone-400 uppercase font-bold text-rose-600 block">Wymeldowanie</span>
+                              <span className="text-[10px] uppercase font-bold text-rose-600 block">Wymeldowanie</span>
                               <span className="font-bold text-stone-900 text-xs">🔴 {b.check_out}</span>
                             </div>
                           </div>
