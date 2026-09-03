@@ -112,6 +112,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 relative">
       
+      {/* Baner powitalny z logo zamiast napisu */}
       <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
         <div className="absolute inset-0">
@@ -124,9 +125,18 @@ export default function Home() {
           />
         </div>
         <div className="relative z-20 max-w-4xl mx-auto text-white">
-          <span className="text-stone-300 text-xs md:text-sm font-semibold tracking-[0.25em] uppercase mb-4 block">
-            Puerto Władysławowo
-          </span>
+          
+          {/* LOGO ZAMIAST TEKSTU */}
+          <div className="mb-6 flex justify-center">
+            <Image 
+              src="/logo.png" 
+              alt="Puerto Władysławowo" 
+              width={160} 
+              height={55} 
+              className="object-contain h-10 w-auto brightness-0 invert drop-shadow-md" 
+            />
+          </div>
+
           <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight mb-6 leading-tight">
             Twój luksusowy azymut nad morzem
           </h1>
