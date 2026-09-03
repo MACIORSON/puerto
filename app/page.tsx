@@ -21,22 +21,22 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Definiujemy ile zdjęć znajduje się w każdym z 9 folderów (możesz dostosować liczby)
+  // Dokładna liczba zdjęć w poszczególnych folderach pokoi (1-9)
   const roomImageCounts: Record<number, number> = {
-    1: 4,
-    2: 4,
-    3: 4,
-    4: 4,
-    5: 4,
-    6: 4,
-    7: 4,
-    8: 4,
-    9: 4,
+    1: 11,
+    2: 6,
+    3: 5,
+    4: 11,
+    5: 6,
+    6: 5,
+    7: 6,
+    8: 5,
+    9: 8,
   };
 
-  // Funkcja generująca tablicę ścieżek zdjęć dla konkretnego pokoju (1-9)
+  // Funkcja generująca tablicę ścieżek zdjęć dla konkretnego pokoju
   const getRoomImages = (roomNumber: number) => {
-    const count = roomImageCounts[roomNumber] || 3;
+    const count = roomImageCounts[roomNumber] || 4;
     const images = [];
     for (let i = 1; i <= count; i++) {
       images.push(`/images/pokoj ${roomNumber}/pokoj ${roomNumber} (${i}).jpg`);
@@ -167,9 +167,7 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-6 -mt-12 relative z-30">
         <div className="bg-white rounded-3xl shadow-xl border border-stone-100/80 p-8 md:p-10 grid md:grid-cols-3 gap-8">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">
-              ✦
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">✦</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Wyjątkowa lokalizacja</h3>
               <p className="text-stone-500 text-xs leading-relaxed">Zaledwie kilka minut spacerem dzieli Cię od szerokiej, piaszczystej plaży oraz lokalnych atrakcji.</p>
@@ -177,9 +175,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">
-              ✓
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">✓</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Bezproblemowy pobyt</h3>
               <p className="text-stone-500 text-xs leading-relaxed">W cenie pobytu otrzymujesz bezpieczny parking na posesji, szybkie Wi-Fi oraz w pełni wyposażony aneks kuchenny.</p>
@@ -187,9 +183,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">
-              ★
-            </div>
+            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">★</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Najwyższy standard</h3>
               <p className="text-stone-500 text-xs leading-relaxed">Nowoczesny design, nieskazitelna czystość oraz dbałość o każdy detal potwierdzone oceną 9.8 / 10.</p>
@@ -203,7 +197,7 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
             Wybierz swój pokój
           </h2>
-          <p className="text-stone-600 max-w-xl mx-auto">Wszystkie 9 pokoi i apartamentów. Kliknij, aby zobaczyć galerię zdjęć.</p>
+          <p className="text-stone-600 max-w-xl mx-auto">Wszystkie 9 pokoi i apartamentów. Kliknij, aby zobaczyć pełną galerię zdjęć.</p>
         </div>
 
         {error && (
@@ -445,7 +439,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Modal z galeria konkretnego pokoju */}
+      {/* Modal z dedykowaną galerią konkretnego pokoju */}
       {selectedApartment && (
         <div 
           onClick={() => setSelectedApartment(null)}
