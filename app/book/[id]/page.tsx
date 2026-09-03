@@ -27,14 +27,17 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const [successMessage, setSuccessMessage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Stan dla okienka ostrzegawczego o przekroczeniu liczby miejsc
   const [showCapacityModal, setShowCapacityModal] = useState(false);
-
-  // Stany dla kalendarza
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(8); // 8 = Wrzesień
+
+  // AUTOMATYCZNE ROZPOZNAWANIE DZISIEJSZEJ DATY
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   
+  // Formatowanie dzisiejszej daty do porównań (YYYY-MM-DD)
+  const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   const calendarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,16 +96,17 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"
   ];
 
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  
   const getFirstDayOfMonth = (year: number, month: number) => {
     let day = new Date(year, month, 1).getDay();
     return day === 0 ? 6 : day - 1;
   };
 
   const handlePrevMonth = () => {
+    // Zabezpieczenie przed cofaniem się poniżej obecnego miesiąca
+    if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) return;
+    
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear(currentYear - 1);
@@ -125,6 +129,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     const formattedMonth = (currentMonth + 1) < 10 ? `0${currentMonth + 1}` : currentMonth + 1;
     const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
 
+    // Blokada kliknięcia w daty z przeszłości
+    if (dateStr < todayFormatted) return;
+
     if (!checkIn || (checkIn && checkOut)) {
       setCheckIn(dateStr);
       setCheckOut('');
@@ -144,6 +151,13 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       alert('Proszę wybrać termin pobytu i kliknąć "Zatwierdź termin".');
       return;
     }
+    
+    // Ostateczne zabezpieczenie formularza
+    if (checkIn < todayFormatted) {
+      alert('Data zameldowania nie może być w przeszłości!');
+      return;
+    }
+
     setSubmitting(true);
 
     const { error: bookingError } = await supabase.from('bookings').insert([
@@ -187,11 +201,12 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayIndex = getFirstDayOfMonth(currentYear, currentMonth);
+  // Sprawdzamy, czy jesteśmy w aktualnym miesiącu, aby zablokować strzałkę w lewo
+  const isCurrentMonth = currentYear === today.getFullYear() && currentMonth === today.getMonth();
 
   return (
     <main className="min-h-screen bg-stone-50 py-12 px-6 flex justify-center items-start relative">
       
-      {/* MODAL OSTRZEGAWCZY O POJEMNOŚCI */}
       {showCapacityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-stone-100">
@@ -218,7 +233,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
         
         <form onSubmit={handleSubmit} className="grid gap-6">
           
-          {/* WYBÓR DAT */}
           <div className="relative" ref={calendarRef}>
             <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Termin pobytu</label>
             <div 
@@ -236,7 +250,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
               <span className="text-stone-400 text-xs">&#9660;</span>
             </div>
 
-            {/* Okno kalendarza */}
             {isCalendarOpen && (
               <div className="absolute top-full left-0 mt-2 bg-white text-stone-800 rounded-2xl shadow-2xl p-6 w-full z-40 border border-stone-200">
                 
@@ -244,7 +257,8 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                   <button 
                     type="button" 
                     onClick={handlePrevMonth}
-                    className="p-2 rounded-full hover:bg-stone-100 text-stone-600 font-bold transition"
+                    disabled={isCurrentMonth}
+                    className={`p-2 rounded-full font-bold transition ${isCurrentMonth ? 'text-stone-200 cursor-not-allowed' : 'hover:bg-stone-100 text-stone-600'}`}
                   >
                     &larr;
                   </button>
@@ -280,19 +294,26 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                     const formattedMonth = (currentMonth + 1) < 10 ? `0${currentMonth + 1}` : currentMonth + 1;
                     const dateStr = `${currentYear}-${formattedMonth}-${formattedDay}`;
                     
+                    const isPast = dateStr < todayFormatted;
                     const isStart = dateStr === checkIn;
                     const isEnd = dateStr === checkOut;
                     const isInRange = checkIn && checkOut && dateStr > checkIn && dateStr < checkOut;
 
-                    let bgClass = "hover:bg-stone-100 text-stone-800";
-                    if (isStart || isEnd) bgClass = "bg-[#D4A373] text-white font-bold rounded-xl";
-                    else if (isInRange) bgClass = "bg-[#D4A373]/20 text-stone-900";
+                    let bgClass = "hover:bg-stone-100 text-stone-800 cursor-pointer";
+                    
+                    if (isPast) {
+                      bgClass = "text-stone-300 cursor-not-allowed bg-stone-50/50";
+                    } else if (isStart || isEnd) {
+                      bgClass = "bg-[#D4A373] text-white font-bold rounded-xl cursor-pointer";
+                    } else if (isInRange) {
+                      bgClass = "bg-[#D4A373]/20 text-stone-900 cursor-pointer";
+                    }
 
                     return (
                       <div 
                         key={i} 
                         onClick={() => handleDateClick(day)}
-                        className={`py-2.5 rounded-lg cursor-pointer transition ${bgClass}`}
+                        className={`py-2.5 rounded-lg transition ${bgClass}`}
                       >
                         {day}
                       </div>
@@ -312,7 +333,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             )}
           </div>
 
-          {/* LICZBA GOŚCI */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Liczba gości</label>
             <div className="flex items-center justify-between border border-stone-200 rounded-2xl p-3.5 bg-white">
@@ -333,7 +353,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
 
-          {/* DANE KONTAKTOWE GOŚCIA - POPRAWIONE TŁO I TEKST */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-2">Imię i nazwisko</label>
@@ -359,7 +378,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
           
-          {/* PODSUMOWANIE KOSZTÓW */}
           <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200/60 space-y-3">
             <div className="flex justify-between text-sm text-stone-600">
               <span>Cena za 1 dobę:</span>
