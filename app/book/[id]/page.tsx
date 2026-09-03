@@ -33,6 +33,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const [showCapacityModal, setShowCapacityModal] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -41,6 +42,19 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Słownik z liczbą zdjęć dla każdego pokoju
+  const roomImageCounts: Record<number, number> = {
+    1: 11,
+    2: 6,
+    3: 5,
+    4: 11,
+    5: 6,
+    6: 5,
+    7: 6,
+    8: 5,
+    9: 8,
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -73,7 +87,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     fetchApartmentAndRooms();
   }, [id, defaultGuests]);
 
-  // Sprawdzanie dostępnych numerów pokoi z uwzględnieniem 3 głównych kategorii
+  // Sprawdzanie dostępnych numerów pokoi
   useEffect(() => {
     async function checkAvailableRooms() {
       if (!checkIn || !checkOut || !id) return;
@@ -82,9 +96,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       if (!allApts) return;
 
       const aptIndex = allApts.findIndex((a) => a.id === id);
-      
-      // Mapowanie: jeśli to 1. kategoria -> [1, 4, 7], 2. kategoria -> [2, 5, 8], 3. kategoria -> [3, 6, 9]
-      // Jeśli rekordów w bazie jest 9, dopasowujemy modulo lub pozycję
       const normalizedIndex = aptIndex >= 0 ? aptIndex % 3 : 0;
       const possibleRoomsMap: Record<number, number[]> = {
         0: [1, 4, 7],
@@ -113,6 +124,18 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
     checkAvailableRooms();
   }, [checkIn, checkOut, id]);
+
+  // Pobieramy zdjęcia dla aktualnie wybranego numeru pokoju (selectedRoomNumber)
+  const getRoomImages = (roomNum: number) => {
+    const count = roomImageCounts[roomNum] || 4;
+    const images = [];
+    for (let i = 1; i <= count; i++) {
+      images.push(`/images/pokoj ${roomNum}/pokoj ${roomNum} (${i}).jpg`);
+    }
+    return images;
+  };
+
+  const currentRoomImages = getRoomImages(selectedRoomNumber);
 
   const handleIncreaseGuests = () => {
     if (apartment && guests >= apartment.capacity) {
@@ -275,15 +298,47 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
+          {/* GALERIA ZDJĘĆ Z MOŻLIWOŚCIĄ PRZEWIJANIA */}
           <div className="lg:col-span-5 lg:sticky lg:top-8 space-y-6">
-            <div className="relative h-64 md:h-80 w-full rounded-3xl overflow-hidden shadow-lg border border-stone-100">
+            <div className="relative h-64 md:h-80 w-full rounded-3xl overflow-hidden shadow-lg border border-stone-100 bg-stone-100">
               <Image 
-                src={apartment.image_url || "/images/pokoj 1/pokoj 1 (1).jpg"} 
+                src={currentRoomImages[activeImageIndex] || currentRoomImages[0]} 
                 alt={apartment.name} 
                 fill 
-                className="object-cover"
+                className="object-cover transition-all duration-300"
                 priority
               />
+              {currentRoomImages.length > 1 && (
+                <>
+                  <button 
+                    type="button"
+                    onClick={() => setActiveImageIndex((prev) => (prev === 0 ? currentRoomImages.length - 1 : prev - 1))} 
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setActiveImageIndex((prev) => (prev === currentRoomImages.length - 1 ? 0 : prev + 1))} 
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Miniaturki */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {currentRoomImages.map((img: string, idx: number) => (
+                <div 
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative w-14 h-14 rounded-xl overflow-hidden cursor-pointer flex-shrink-0 border-2 transition ${activeImageIndex === idx ? 'border-stone-900 scale-105' : 'border-transparent opacity-60'}`}
+                >
+                  <Image src={img} alt="miniaturka" fill className="object-cover" />
+                </div>
+              ))}
             </div>
 
             <div>
@@ -392,7 +447,10 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                         <button
                           key={num}
                           type="button"
-                          onClick={() => setSelectedRoomNumber(num)}
+                          onClick={() => {
+                            setSelectedRoomNumber(num);
+                            setActiveImageIndex(0); // resetujemy indeks zdjęcia przy zmianie pokoju
+                          }}
                           className={`py-3 rounded-2xl font-bold text-sm border-2 transition ${selectedRoomNumber === num ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-stone-50 text-stone-800 hover:border-stone-400'}`}
                         >
                           Pokój nr {num}
