@@ -12,12 +12,20 @@ export default function Navbar() {
       setIsScrolled(window.scrollY > 50);
     };
     
-    // Ustawienie początkowego stanu (w razie odświeżenia strony w połowie)
     handleScroll();
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Funkcja do płynnego zjeżdżania na sam dół
+  const scrollToFooter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const footer = document.getElementById('footer');
+    if (footer) {
+      footer.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <nav 
@@ -38,13 +46,12 @@ export default function Navbar() {
           />
         </Link>
         
-        {/* Kolor tekstu zmienia się z białego na ciemny podczas scrollowania */}
         <div className={`flex gap-6 text-sm font-medium transition-colors duration-500 ${
           isScrolled ? 'text-gray-700' : 'text-white drop-shadow-md'
         }`}>
           <Link href="/" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>Strona główna</Link>
-          <Link href="/about" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>O nas</Link>
-          <Link href="/contact" className={`transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>Kontakt</Link>
+          <a href="#footer" onClick={scrollToFooter} className={`cursor-pointer transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>O nas</a>
+          <a href="#footer" onClick={scrollToFooter} className={`cursor-pointer transition ${isScrolled ? 'hover:text-stone-900' : 'hover:text-stone-200'}`}>Kontakt</a>
         </div>
       </div>
     </nav>

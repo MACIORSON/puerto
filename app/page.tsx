@@ -352,6 +352,57 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ROZBUDOWANA STOPKA (KONTAKT I O NAS) */}
+      <footer id="footer" className="bg-white border-t border-stone-200 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+            
+            {/* O Nas */}
+            <div>
+              <span className="font-serif text-3xl font-bold text-stone-900 block mb-6">Puerto.</span>
+              <p className="text-sm text-stone-500 leading-relaxed max-w-sm">
+                Apartamenty Puerto to kameralne i luksusowe miejsce stworzone z myślą o Twoim idealnym wypoczynku we Władysławowie. Łączymy nadmorski klimat z najwyższym standardem wykończenia.
+              </p>
+            </div>
+
+            {/* Szybki kontakt */}
+            <div>
+              <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Kontakt</h4>
+              <div className="space-y-4 text-sm text-stone-600">
+                <p className="flex items-center gap-3">
+                  <span className="text-stone-400">📞</span> +48 123 456 789
+                </p>
+                <p className="flex items-center gap-3">
+                  <span className="text-stone-400">✉️</span> kontakt@puerto.pl
+                </p>
+                <p className="flex items-center gap-3">
+                  <span className="text-stone-400">📍</span> ul. Morska 12, Władysławowo
+                </p>
+              </div>
+            </div>
+
+            {/* Przydatne linki */}
+            <div>
+              <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Nawigacja</h4>
+              <div className="flex flex-col space-y-3 text-sm font-medium text-stone-500">
+                <button onClick={scrollToApartments} className="text-left hover:text-stone-900 transition w-fit cursor-pointer">Wybierz apartament</button>
+                <Link href="/" className="hover:text-stone-900 transition w-fit">Polityka prywatności</Link>
+                <Link href="/" className="hover:text-stone-900 transition w-fit">Regulamin pobytu</Link>
+              </div>
+            </div>
+
+          </div>
+          
+          <div className="border-t border-stone-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-400">
+            <p>&copy; {new Date().getFullYear()} Apartamenty Puerto Władysławowo. Wszelkie prawa zastrzeżone.</p>
+            <div className="flex gap-4 mt-4 md:mt-0">
+              <span className="hover:text-stone-600 cursor-pointer transition">Facebook</span>
+              <span className="hover:text-stone-600 cursor-pointer transition">Instagram</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
       {/* MODAL */}
       {selectedApartment && (
         <div 
