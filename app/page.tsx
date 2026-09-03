@@ -21,6 +21,9 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+  // Stan przechowujący ID obecnie rozwiniętej kategorii na stronie głównej
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+
   // Dokładna liczba zdjęć w poszczególnych folderach pokoi (1-9)
   const roomImageCounts: Record<number, number> = {
     1: 11,
@@ -34,7 +37,13 @@ export default function Home() {
     9: 8,
   };
 
-  // Funkcja generująca tablicę ścieżek zdjęć dla konkretnego pokoju
+  // Mapowanie indeksu kategorii (0, 1, 2) na przypisane im 3 numery pokoi
+  const categoryRoomsMap: Record<number, number[]> = {
+    0: [1, 4, 7], // Kategoria 1 (np. Rodzinny) -> Pokoje 1, 4, 7
+    1: [2, 5, 8], // Kategoria 2 (np. Deluxe) -> Pokoje 2, 5, 8
+    2: [3, 6, 9], // Kategoria 3 (np. Studio) -> Pokoje 3, 6, 9
+  };
+
   const getRoomImages = (roomNumber: number) => {
     const count = roomImageCounts[roomNumber] || 4;
     const images = [];
@@ -68,11 +77,15 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: aptData, error: aptError } = await supabase.from('apartments').select('*').order('name', { ascending: true });
+      const { data: aptData, error: aptError } = await supabase.from('apartments').select('*').order('price_per_night', { ascending: false });
       if (aptError) {
         setError(aptError.message);
       } else {
         setApartments(aptData || []);
+        if (aptData && aptData.length > 0) {
+          // Domyślnie rozwijamy pierwszą kategorię
+          setExpandedCategoryId(aptData[0].id);
+        }
       }
 
       const { data: settingsData, error: settingsError } = await supabase
@@ -125,7 +138,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 relative">
       
-      {/* Baner powitalny z powiększonym logo */}
+      {/* Baner powitalny */}
       <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
         <div className="absolute inset-0">
@@ -138,7 +151,6 @@ export default function Home() {
           />
         </div>
         <div className="relative z-20 max-w-4xl mx-auto text-white">
-          
           <div className="mb-6 flex justify-center">
             <Image 
               src="/logo.png" 
@@ -148,7 +160,6 @@ export default function Home() {
               className="object-contain h-16 md:h-20 w-auto brightness-0 invert drop-shadow-lg" 
             />
           </div>
-
           <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight mb-6 leading-tight">
             Twój luksusowy azymut nad morzem
           </h1>
@@ -173,7 +184,6 @@ export default function Home() {
               <p className="text-stone-500 text-xs leading-relaxed">Zaledwie kilka minut spacerem dzieli Cię od szerokiej, piaszczystej plaży oraz lokalnych atrakcji.</p>
             </div>
           </div>
-
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">✓</div>
             <div>
@@ -181,7 +191,6 @@ export default function Home() {
               <p className="text-stone-500 text-xs leading-relaxed">W cenie pobytu otrzymujesz bezpieczny parking na posesji, szybkie Wi-Fi oraz w pełni wyposażony aneks kuchenny.</p>
             </div>
           </div>
-
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">★</div>
             <div>
@@ -192,12 +201,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* GŁÓWNA SEKCJA: 3 KATEGORIE Z ROZWIJANYMI NUMERAMI POKOI */}
       <section id="apartments" className="max-w-7xl mx-auto px-6 py-24 scroll-mt-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
-            Wybierz swój pokój
+            Rodzaje pokoi i apartamentów
           </h2>
-          <p className="text-stone-600 max-w-xl mx-auto">Wszystkie 9 pokoi i apartamentów. Kliknij, aby zobaczyć pełną galerię zdjęć.</p>
+          <p className="text-stone-600 max-w-xl mx-auto">Wybierz kategorię, rozwiń ją i zobacz konkretne pokoje z przypisanymi do nich galeriami zdjęć.</p>
         </div>
 
         {error && (
@@ -207,60 +217,98 @@ export default function Home() {
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-stone-400 font-medium">Ładowanie pokoi...</div>
+          <div className="text-center py-20 text-stone-400 font-medium">Ładowanie kategorii...</div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {apartments?.map((apt, index) => {
-              const roomNum = index + 1; // 1 do 9
-              const roomImages = getRoomImages(roomNum);
-              const coverImage = roomImages[0];
+          <div className="space-y-10">
+            {apartments?.map((cat, catIndex) => {
+              const isExpanded = expandedCategoryId === cat.id;
+              // Przypisane 3 numery pokoi dla tej kategorii
+              const roomNumbers = categoryRoomsMap[catIndex] || [1, 2, 3];
+              // Zdjęcie okładkowe kategorii to pierwsze zdjęcie pierwszego pokoju z tej grupy
+              const firstRoomImages = getRoomImages(roomNumbers[0]);
 
               return (
-                <div key={apt.id} className="bg-white rounded-3xl shadow-sm overflow-hidden border border-stone-100 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-                  <div 
-                    onClick={() => { setSelectedApartment({ ...apt, roomNum, images: roomImages }); setActiveImageIndex(0); }} 
-                    className="relative h-60 w-full bg-stone-100 overflow-hidden cursor-pointer block"
-                  >
-                    <Image 
-                      src={coverImage} 
-                      alt={apt.name} 
-                      fill 
-                      className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md text-stone-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                      Do {apt.capacity} osób
+                <div key={cat.id} className="bg-white rounded-3xl shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300">
+                  
+                  {/* Górny panel kategorii (Zawsze widoczny) */}
+                  <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-stone-50/50">
+                    <div className="flex items-center gap-6">
+                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-stone-200">
+                        <Image src={firstRoomImages[0]} alt={cat.name} fill className="object-cover" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Kategoria główna</span>
+                        <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">{cat.name}</h3>
+                        <p className="text-stone-600 text-sm max-w-xl leading-relaxed">{cat.description}</p>
+                      </div>
                     </div>
-                    <div className="absolute bottom-4 left-4 bg-stone-900/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full">
-                      Pokój nr {roomNum}
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 
-                      onClick={() => { setSelectedApartment({ ...apt, roomNum, images: roomImages }); setActiveImageIndex(0); }}
-                      className="text-xl font-serif font-bold text-stone-900 mb-2 hover:text-blue-600 transition cursor-pointer"
-                    >
-                      {apt.name}
-                    </h3>
-                    <p className="text-stone-600 text-sm leading-relaxed mb-6">{apt.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <span className="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-lg">Aneks kuchenny</span>
-                      <span className="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-lg">Wi-Fi</span>
-                      <span className="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-lg">Łazienka</span>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto justify-between">
+                      <div className="text-left md:text-right">
+                        <span className="text-2xl font-bold text-stone-900">{cat.price_per_night} zł</span>
+                        <span className="text-xs text-stone-500 block">za dobę • Do {cat.capacity} osób</span>
+                      </div>
+                      <button 
+                        onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
+                        className="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3.5 rounded-2xl transition shadow-sm text-sm cursor-pointer flex items-center gap-2"
+                      >
+                        <span>{isExpanded ? 'Zwiń pokoje' : 'Wybierz pokój (3 dostępne)'}</span>
+                        <span className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>↓</span>
+                      </button>
                     </div>
                   </div>
-                  <div className="bg-stone-50/50 px-6 py-5 border-t border-stone-100 flex justify-between items-center">
-                    <div>
-                      <span className="text-xl font-bold text-stone-900">{apt.price_per_night} zł</span>
-                      <span className="text-xs text-stone-500 block">za dobę</span>
+
+                  {/* Rozwijana lista 3 konkretnych numerów pokoi */}
+                  {isExpanded && (
+                    <div className="p-6 md:p-8 border-t border-stone-100 bg-white">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-6">
+                        Wybierz konkretny numer pokoju w tej kategorii:
+                      </h4>
+
+                      <div className="grid md:grid-cols-3 gap-6">
+                        {roomNumbers.map((roomNum) => {
+                          const roomImages = getRoomImages(roomNum);
+
+                          return (
+                            <div key={roomNum} className="border border-stone-200/80 rounded-2xl overflow-hidden bg-stone-50/40 flex flex-col justify-between group hover:shadow-md transition">
+                              <div 
+                                onClick={() => { setSelectedApartment({ ...cat, roomNum, images: roomImages }); setActiveImageIndex(0); }}
+                                className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer"
+                              >
+                                <Image src={roomImages[0]} alt={`Pokój nr ${roomNum}`} fill className="object-cover group-hover:scale-105 transition duration-500" />
+                                <div className="absolute top-3 left-3 bg-stone-900 text-white text-xs font-bold px-3 py-1 rounded-xl shadow-sm">
+                                  Pokój nr {roomNum}
+                                </div>
+                                <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-stone-900 text-[11px] font-bold px-2.5 py-1 rounded-lg">
+                                  {roomImages.length} zdjęć 📷
+                                </div>
+                              </div>
+
+                              <div className="p-5">
+                                <h5 
+                                  onClick={() => { setSelectedApartment({ ...cat, roomNum, images: roomImages }); setActiveImageIndex(0); }}
+                                  className="font-serif font-bold text-stone-900 text-base mb-1 hover:text-[#D4A373] transition cursor-pointer"
+                                >
+                                  Pokój nr {roomNum} — {cat.name}
+                                </h5>
+                                <p className="text-stone-500 text-xs mb-4">Pełne wyposażenie, aneks kuchenny, łazienka.</p>
+                                <div className="flex items-center justify-between pt-3 border-t border-stone-200/60">
+                                  <span className="font-extrabold text-stone-900 text-sm">{cat.price_per_night} zł / doba</span>
+                                  <Link 
+                                    href={`/book/${cat.id}`} 
+                                    className="bg-[#D4A373] hover:bg-[#c39263] text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm"
+                                  >
+                                    Rezerwuj nr {roomNum}
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <Link 
-                      href={`/book/${apt.id}`} 
-                      className="bg-stone-900 text-white font-medium px-5 py-2.5 rounded-2xl hover:bg-stone-800 transition shadow-sm text-sm"
-                    >
-                      Rezerwuj
-                    </Link>
-                  </div>
+                  )}
+
                 </div>
               );
             })}
@@ -268,6 +316,7 @@ export default function Home() {
         )}
       </section>
 
+      {/* Sekcja FAQ */}
       <section className="bg-white py-24 border-t border-stone-200/60">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -279,18 +328,13 @@ export default function Home() {
             {faqItems.map((item, index) => {
               const isOpen = openFaq === index;
               return (
-                <div 
-                  key={index} 
-                  className="bg-stone-50 rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200"
-                >
+                <div key={index} className="bg-stone-50 rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200">
                   <button
                     onClick={() => toggleFaq(index)}
                     className="w-full p-6 text-left flex justify-between items-center font-bold text-stone-900 focus:outline-none cursor-pointer"
                   >
                     <span className="text-base">{item.q}</span>
-                    <span className={`transform transition-transform duration-200 text-xl text-stone-500 ${isOpen ? 'rotate-180' : ''}`}>
-                      ↓
-                    </span>
+                    <span className={`transform transition-transform duration-200 text-xl text-stone-500 ${isOpen ? 'rotate-180' : ''}`}>↓</span>
                   </button>
                   {isOpen && (
                     <div className="px-6 pb-6 text-stone-600 text-sm leading-relaxed border-t border-stone-200/40 pt-4">
@@ -304,6 +348,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Sekcja opinii */}
       <section className="bg-stone-100/70 py-24 border-t border-stone-200/60">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-2 block">Opinie i oceny</span>
@@ -314,12 +359,7 @@ export default function Home() {
             <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
-                  <Image 
-                    src="/images/booking.jpg" 
-                    alt="Booking.com" 
-                    fill 
-                    className="object-contain" 
-                  />
+                  <Image src="/images/booking.jpg" alt="Booking.com" fill className="object-contain" />
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <span className="bg-blue-900 text-white text-xs font-bold px-2.5 py-1 rounded-lg">{stats.booking_rating} / 10</span>
@@ -328,26 +368,15 @@ export default function Home() {
                 <p className="text-xs font-semibold text-stone-500 mb-4">Na podstawie {stats.booking_reviews_count} opinii gości</p>
                 <p className="text-stone-600 text-sm mb-6">Ocena „Wyjątkowy” przyznana przez zweryfikowanych wczasowiczów.</p>
               </div>
-              <a 
-                href="https://www.booking.com/hotel/pl/puerto-wladyslawowo.pl.html#tab-reviews" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full bg-blue-900 text-white font-medium py-3.5 rounded-2xl hover:bg-blue-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
-              >
-                <span>Sprawdź opinie na Booking.com</span>
-                <span>&rarr;</span>
+              <a href="https://www.booking.com/hotel/pl/puerto-wladyslawowo.pl.html#tab-reviews" target="_blank" rel="noopener noreferrer" className="w-full bg-blue-900 text-white font-medium py-3.5 rounded-2xl hover:bg-blue-800 transition text-sm shadow-sm flex items-center justify-center gap-2">
+                <span>Sprawdź opinie na Booking.com</span><span>&rarr;</span>
               </a>
             </div>
 
             <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
-                  <Image 
-                    src="/images/google.jpg" 
-                    alt="Google" 
-                    fill 
-                    className="object-contain" 
-                  />
+                  <Image src="/images/google.jpg" alt="Google" fill className="object-contain" />
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <span className="bg-stone-900 text-white text-xs font-bold px-2.5 py-1 rounded-lg">{stats.google_rating} / 5.0</span>
@@ -356,14 +385,8 @@ export default function Home() {
                 <p className="text-xs font-semibold text-stone-500 mb-4">Na podstawie {stats.google_reviews_count} opinii w Mapach</p>
                 <p className="text-stone-600 text-sm mb-6">Zobacz realne oceny oraz wizytówkę naszego obiektu w Google.</p>
               </div>
-              <a 
-                href="https://www.google.com/maps/place/Puerto+W%C5%82adys%C5%82awowo/@54.7986906,18.3888293,17z/data=!3m1!4b1!4m17!1m5!8m4!1e1!2s112377943502415156667!3m1!1e1!3m10!1s0x46fdb3004ca818bb:0x80990370f55ffc13!5m2!4m1!1i2!8m2!3d54.7986875!4d18.3914042!9m1!1b1!16s%2Fg%2F11xn94lj11?entry=ttu" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full bg-stone-900 text-white font-medium py-3.5 rounded-2xl hover:bg-stone-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
-              >
-                <span>Zobacz opinie w Google</span>
-                <span>&rarr;</span>
+              <a href="https://www.google.com/maps/place/Puerto+W%C5%82adys%C5%82awowo/@54.7986906,18.3888293,17z/data=!3m1!4b1!4m17!1m5!8m4!1e1!2s112377943502415156667!3m1!1e1!3m10!1s0x46fdb3004ca818bb:0x80990370f55ffc13!5m2!4m1!1i2!8m2!3d54.7986875!4d18.3914042!9m1!1b1!16s%2Fg%2F11xn94lj11?entry=ttu" target="_blank" rel="noopener noreferrer" className="w-full bg-stone-900 text-white font-medium py-3.5 rounded-2xl hover:bg-stone-800 transition text-sm shadow-sm flex items-center justify-center gap-2">
+                <span>Zobacz opinie w Google</span><span>&rarr;</span>
               </a>
             </div>
           </div>
@@ -375,35 +398,19 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
             <div>
-              <div className="mb-6">
-                <Image 
-                  src="/logo.png" 
-                  alt="Puerto Władysławowo" 
-                  width={180} 
-                  height={60} 
-                  className="object-contain h-14 w-auto" 
-                />
-              </div>
+              <div className="mb-6"><Image src="/logo.png" alt="Puerto Władysławowo" width={180} height={60} className="object-contain h-14 w-auto" /></div>
               <p className="text-sm text-stone-500 leading-relaxed max-w-sm">
                 Apartamenty Puerto to kameralne i luksusowe miejsce stworzone z myślą o Twoim idealnym wypoczynku we Władysławowie. Łączymy nadmorski klimat z najwyższym standardem wykończenia.
               </p>
             </div>
-
             <div>
               <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Kontakt</h4>
               <div className="space-y-4 text-sm text-stone-600">
-                <p className="flex items-center gap-3">
-                  <span className="text-stone-400">📞</span> +48 609 668 134
-                </p>
-                <p className="flex items-center gap-3">
-                  <span className="text-stone-400">✉️</span> kontakt@puerto-wladyslawowo.pl
-                </p>
-                <p className="flex items-center gap-3">
-                  <span className="text-stone-400">📍</span> ul. Krótka 1, Władysławowo
-                </p>
+                <p className="flex items-center gap-3"><span className="text-stone-400">📞</span> +48 609 668 134</p>
+                <p className="flex items-center gap-3"><span className="text-stone-400">✉️</span> kontakt@puerto-wladyslawowo.pl</p>
+                <p className="flex items-center gap-3"><span className="text-stone-400">📍</span> ul. Krótka 1, Władysławowo</p>
               </div>
             </div>
-
             <div>
               <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Nawigacja</h4>
               <div className="flex flex-col space-y-3 text-sm font-medium text-stone-500">
@@ -413,24 +420,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-          
           <div className="border-t border-stone-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-400">
             <p>&copy; {new Date().getFullYear()} Apartamenty Puerto Władysławowo. Wszelkie prawa zastrzeżone.</p>
-            
             <div className="flex items-center gap-4 mt-4 md:mt-0">
-              <a 
-                href="https://www.facebook.com/profile.php?id=61577936825974" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:opacity-80 transition"
-              >
+              <a href="https://www.facebook.com/profile.php?id=61577936825974" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition">
                 <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-stone-200">
-                  <Image 
-                    src="/images/facebook.jpg" 
-                    alt="Facebook" 
-                    fill 
-                    className="object-cover" 
-                  />
+                  <Image src="/images/facebook.jpg" alt="Facebook" fill className="object-cover" />
                 </div>
                 <span className="text-stone-700 font-medium text-sm">Facebook</span>
               </a>
@@ -441,57 +436,26 @@ export default function Home() {
 
       {/* Modal z dedykowaną galerią konkretnego pokoju */}
       {selectedApartment && (
-        <div 
-          onClick={() => setSelectedApartment(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()} 
-            className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
-          >
-            <button 
-              onClick={() => setSelectedApartment(null)}
-              className="absolute top-5 right-5 bg-stone-100 hover:bg-stone-200 text-stone-900 w-9 h-9 rounded-full flex items-center justify-center font-bold transition z-20 cursor-pointer shadow-sm"
-              aria-label="Zamknij"
-            >
-              ✕
-            </button>
+        <div onClick={() => setSelectedApartment(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setSelectedApartment(null)} className="absolute top-5 right-5 bg-stone-100 hover:bg-stone-200 text-stone-900 w-9 h-9 rounded-full flex items-center justify-center font-bold transition z-20 cursor-pointer shadow-sm">✕</button>
 
             <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-1 block">Pokój nr {selectedApartment.roomNum}</span>
             <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 pr-10">{selectedApartment.name}</h2>
 
             <div className="relative h-60 md:h-72 w-full rounded-2xl overflow-hidden bg-stone-100 mb-4 shadow-inner">
-              <Image 
-                src={selectedApartment.images[activeImageIndex]} 
-                alt="Zdjęcie pokoju" 
-                fill 
-                className="object-cover transition-all duration-300" 
-              />
+              <Image src={selectedApartment.images[activeImageIndex]} alt="Zdjęcie pokoju" fill className="object-cover transition-all duration-300" />
               {selectedApartment.images.length > 1 && (
                 <>
-                  <button 
-                    onClick={() => setActiveImageIndex((prev) => (prev === 0 ? selectedApartment.images.length - 1 : prev - 1))}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer"
-                  >
-                    &larr;
-                  </button>
-                  <button 
-                    onClick={() => setActiveImageIndex((prev) => (prev === selectedApartment.images.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer"
-                  >
-                    &rarr;
-                  </button>
+                  <button onClick={() => setActiveImageIndex((prev) => (prev === 0 ? selectedApartment.images.length - 1 : prev - 1))} className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer">&larr;</button>
+                  <button onClick={() => setActiveImageIndex((prev) => (prev === selectedApartment.images.length - 1 ? 0 : prev + 1))} className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer">&rarr;</button>
                 </>
               )}
             </div>
 
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
               {selectedApartment.images.map((img: string, idx: number) => (
-                <div 
-                  key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`relative w-14 h-14 rounded-xl overflow-hidden cursor-pointer flex-shrink-0 border-2 transition ${activeImageIndex === idx ? 'border-stone-900 scale-105' : 'border-transparent opacity-60'}`}
-                >
+                <div key={idx} onClick={() => setActiveImageIndex(idx)} className={`relative w-14 h-14 rounded-xl overflow-hidden cursor-pointer flex-shrink-0 border-2 transition ${activeImageIndex === idx ? 'border-stone-900 scale-105' : 'border-transparent opacity-60'}`}>
                   <Image src={img} alt="miniaturka" fill className="object-cover" />
                 </div>
               ))}
@@ -504,10 +468,7 @@ export default function Home() {
                 <span className="text-xl font-bold text-stone-900">{selectedApartment.price_per_night} zł</span>
                 <span className="text-xs text-stone-500 block">za dobę • Do {selectedApartment.capacity} osób</span>
               </div>
-              <Link 
-                href={`/book/${selectedApartment.id}`} 
-                className="w-full sm:w-auto bg-stone-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-stone-800 transition text-center text-sm shadow-sm"
-              >
+              <Link href={`/book/${selectedApartment.id}`} className="w-full sm:w-auto bg-stone-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-stone-800 transition text-center text-sm shadow-sm">
                 Zarezerwuj teraz
               </Link>
             </div>
