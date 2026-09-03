@@ -21,7 +21,6 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // ZMIANA: Na początku żaden pokój nie jest rozwinięty (wartość null zamiast 0)
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const roomImageCounts: Record<number, number> = {
@@ -157,7 +156,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F9F8F6] text-stone-800 relative selection:bg-[#D4A373] selection:text-white">
       
-      {/* Baner główny z ciepłym, eleganckim filtrem */}
+      {/* Baner główny */}
       <section className="relative h-[85vh] min-h-[600px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-950/50 z-10"></div>
         <div className="absolute inset-0">
@@ -195,7 +194,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Kafle informacyjne z ciepłym cieniem i podbitym tłem */}
+      {/* Kafle informacyjne */}
       <section className="max-w-6xl mx-auto px-6 -mt-14 relative z-30">
         <div className="bg-[#FAF9F5] rounded-[2.5rem] shadow-xl border border-stone-200/70 p-8 md:p-10 grid md:grid-cols-3 gap-8 backdrop-blur-md">
           <div className="flex items-start gap-4">
@@ -336,8 +335,74 @@ export default function Home() {
         )}
       </section>
 
-      {/* Sekcja FAQ na ciepłym tle */}
+      {/* NOWA SEKCJA: LOKALIZACJA I INTERAKTYWNA MAPA OKOLICY */}
       <section className="bg-[#F3EFEA] py-28 border-t border-stone-200/60">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-2 block">Gdzie nas znaleźć</span>
+            <h2 className="text-3xl md:text-5xl font-serif font-bold text-stone-900 mb-4">Lokalizacja i okolica</h2>
+            <p className="text-stone-600 max-w-xl mx-auto text-sm leading-relaxed">
+              Obiekt położony jest w doskonałej, spokojnej części Władysławowa, zaledwie kilka minut spacerem od morza.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-10 items-center bg-[#FAF9F5] rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-stone-200/70">
+            <div className="lg:col-span-5 space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#D4A373]/10 text-[#D4A373] flex items-center justify-center font-bold flex-shrink-0">📍</div>
+                  <div>
+                    <h4 className="font-serif font-bold text-stone-900 text-base">Adres obiektu</h4>
+                    <p className="text-stone-600 text-xs">ul. Krótka 1, 84-120 Władysławowo</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#D4A373]/10 text-[#D4A373] flex items-center justify-center font-bold flex-shrink-0">🌊</div>
+                  <div>
+                    <h4 className="font-serif font-bold text-stone-900 text-base">Bliskość plaży</h4>
+                    <p className="text-stone-600 text-xs">Kilka minut pieszym spacerem do szerokiej, piaszczystej plaży Bałtyku.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#D4A373]/10 text-[#D4A373] flex items-center justify-center font-bold flex-shrink-0">🛍️</div>
+                  <div>
+                    <h4 className="font-serif font-bold text-stone-900 text-base">Atrakcje i sklepy</h4>
+                    <p className="text-stone-600 text-xs">W pobliżu znajdują się restauracje, kawiarnie, sklepy oraz Aleja Gwiazd Sportu.</p>
+                  </div>
+                </div>
+              </div>
+
+              <a 
+                href="https://www.google.com/maps/place/Puerto+W%C5%82adys%C5%82awowo/@54.7986906,18.3888293,17z" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block w-full text-center bg-stone-900 hover:bg-stone-800 text-white font-medium py-3.5 rounded-2xl transition text-sm shadow-md"
+              >
+                Otwórz w Mapach Google →
+              </a>
+            </div>
+
+            {/* Osadzona mapa Google Maps */}
+            <div className="lg:col-span-7 h-[400px] w-full rounded-3xl overflow-hidden shadow-inner border border-stone-200">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2345.9268875!2d18.3914042!3d54.7986875!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fdb3004ca818bb%3A0x80990370f55ffc13!2sPuerto%20W%C5%82adys%C5%82awowo!5e0!3m2!1spl!2spl!4v1700000000000!5m2!1spl!2spl" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Lokalizacja Puerto Władysławowo"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sekcja FAQ na ciepłym tle */}
+      <section className="bg-[#FAF9F5] py-28 border-t border-stone-200/60">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
             <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-2 block">Wszystko, co warto wiedzieć</span>
@@ -348,7 +413,7 @@ export default function Home() {
             {faqItems.map((item, index) => {
               const isOpen = openFaq === index;
               return (
-                <div key={index} className="bg-[#FAF9F5] rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200 shadow-xs">
+                <div key={index} className="bg-white rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200 shadow-xs">
                   <button
                     onClick={() => toggleFaq(index)}
                     className="w-full p-6 text-left flex justify-between items-center font-bold text-stone-900 focus:outline-none cursor-pointer"
@@ -369,7 +434,7 @@ export default function Home() {
       </section>
 
       {/* Sekcja opinii */}
-      <section className="bg-[#FAF9F5] py-28 border-t border-stone-200/60">
+      <section className="bg-[#F3EFEA] py-28 border-t border-stone-200/60">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-2 block">Opinie i oceny</span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">Zaufanie poparte doświadczeniem</h2>
