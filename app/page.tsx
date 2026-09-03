@@ -21,10 +21,8 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Stan przechowujący indeks obecnie rozwiniętej kategorii (0, 1 lub 2)
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
-  // Dokładna liczba zdjęć w poszczególnych folderach pokoi (1-9)
   const roomImageCounts: Record<number, number> = {
     1: 11,
     2: 6,
@@ -37,7 +35,6 @@ export default function Home() {
     9: 8,
   };
 
-  // 3 główne opcje i przypisane im dokładnie 3 numery pokoi
   const mainCategories = [
     {
       title: "Apartament Rodzinny (4-osobowy)",
@@ -95,7 +92,6 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
-      // Pobieramy rekordy z bazy, żeby mieć poprawne ID do linków rezerwacji (/book/[id])
       const { data: aptData, error: aptError } = await supabase.from('apartments').select('*');
       if (aptError) {
         setError(aptError.message);
@@ -123,10 +119,7 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Znajdź ID z bazy odpowiadające danemu pokoju (lub weź pierwsze dostępne jako fallback)
   const getBookingIdForRoom = (roomNum: number) => {
-    // W bazie mamy 9 pokoi. Załóżmy, że pierwsze 3 rekordy lub cała tabela pasuje.
-    // Jeśli wolisz, możemy dopasować po indeksie:
     if (categories.length >= roomNum) {
       return categories[roomNum - 1].id;
     }
@@ -144,7 +137,7 @@ export default function Home() {
     },
     {
       q: "Czy na terenie obiektu dostępny jest parking?",
-      a: "Tak, dla naszych gości przygotowaliśmy bezpieczny i bezpłatny parking na posesji."
+      a: "Tak, dla naszych gości przygotowaliśmy bezpieczny i bezpłatny parking na terenie posesji."
     },
     {
       q: "Czy w obiekcie można zostawić bagaż przed zameldowaniem?",
@@ -161,17 +154,17 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 relative">
+    <div className="min-h-screen bg-[#F9F8F6] text-stone-800 relative selection:bg-[#D4A373] selection:text-white">
       
-      {/* Baner główny */}
-      <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
-        <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
+      {/* Baner główny z ciepłym, eleganckim filtrem */}
+      <section className="relative h-[85vh] min-h-[600px] flex items-center justify-center text-center px-6">
+        <div className="absolute inset-0 bg-stone-950/50 z-10"></div>
         <div className="absolute inset-0">
           <Image 
             src="/images/pokoj 1/pokoj 1 (1).jpg" 
             alt="Puerto Władysławowo" 
             fill 
-            className="object-cover"
+            className="object-cover scale-105 animate-fade-in"
             priority 
           />
         </div>
@@ -182,57 +175,60 @@ export default function Home() {
               alt="Puerto Władysławowo" 
               width={240} 
               height={85} 
-              className="object-contain h-16 md:h-20 w-auto brightness-0 invert drop-shadow-lg" 
+              className="object-contain h-16 md:h-20 w-auto brightness-0 invert drop-shadow-2xl" 
             />
           </div>
+          <span className="text-xs uppercase tracking-[0.3em] font-medium text-[#D4A373] mb-3 block">Władysławowo • Blisko Plaży</span>
           <h1 className="text-4xl md:text-6xl font-serif font-bold tracking-tight mb-6 leading-tight">
             Twój luksusowy azymut nad morzem
           </h1>
-          <p className="text-lg md:text-xl text-stone-200 mb-10 font-light max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-stone-200 mb-10 font-light max-w-2xl mx-auto leading-relaxed">
             Nowoczesne apartamenty tuż przy plaży. Czystość, komfort i niezapomniana atmosfera.
           </p>
           <button 
             onClick={scrollToApartments}
-            className="bg-stone-900 text-white font-medium px-8 py-4 rounded-full shadow-xl hover:bg-stone-800 transition duration-300 inline-block border border-stone-700 cursor-pointer"
+            className="bg-[#D4A373] hover:bg-[#c39263] text-white font-medium px-9 py-4 rounded-full shadow-2xl transition duration-300 inline-block cursor-pointer tracking-wide text-sm"
           >
             Sprawdź wolne terminy
           </button>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 -mt-12 relative z-30">
-        <div className="bg-white rounded-3xl shadow-xl border border-stone-100/80 p-8 md:p-10 grid md:grid-cols-3 gap-8">
+      {/* Kafle informacyjne z ciepłym cieniem i podbitym tłem */}
+      <section className="max-w-6xl mx-auto px-6 -mt-14 relative z-30">
+        <div className="bg-[#FAF9F5] rounded-[2.5rem] shadow-xl border border-stone-200/70 p-8 md:p-10 grid md:grid-cols-3 gap-8 backdrop-blur-md">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">✦</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#D4A373]/10 flex items-center justify-center text-[#D4A373] flex-shrink-0 text-xl font-serif">✦</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Wyjątkowa lokalizacja</h3>
-              <p className="text-stone-500 text-xs leading-relaxed">Zaledwie kilka minut spacerem dzieli Cię od szerokiej, piaszczystej plaży oraz lokalnych atrakcji.</p>
+              <p className="text-stone-600 text-xs leading-relaxed">Zaledwie kilka minut spacerem dzieli Cię od szerokiej, piaszczystej plaży oraz lokalnych atrakcji.</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">✓</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#D4A373]/10 flex items-center justify-center text-[#D4A373] flex-shrink-0 text-xl font-serif">✓</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Bezproblemowy pobyt</h3>
-              <p className="text-stone-500 text-xs leading-relaxed">W cenie pobytu otrzymujesz bezpieczny parking na posesji, szybkie Wi-Fi oraz w pełni wyposażony aneks kuchenny.</p>
+              <p className="text-stone-600 text-xs leading-relaxed">W cenie pobytu otrzymujesz bezpieczny parking na posesji, szybkie Wi-Fi oraz w pełni wyposażony aneks kuchenny.</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-900 flex-shrink-0 text-xl font-serif">★</div>
+            <div className="w-12 h-12 rounded-2xl bg-[#D4A373]/10 flex items-center justify-center text-[#D4A373] flex-shrink-0 text-xl font-serif">★</div>
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-base mb-1">Najwyższy standard</h3>
-              <p className="text-stone-500 text-xs leading-relaxed">Nowoczesny design, nieskazitelna czystość oraz dbałość o każdy detal potwierdzone oceną 9.8 / 10.</p>
+              <p className="text-stone-600 text-xs leading-relaxed">Nowoczesny design, nieskazitelna czystość oraz dbałość o każdy detal potwierdzone oceną 9.8 / 10.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* GŁÓWNA SEKCJA: DOKŁADNIE 3 GŁÓWNE OPCJE Z ROZWIJANYMI 3 POKOJAMI */}
-      <section id="apartments" className="max-w-7xl mx-auto px-6 py-24 scroll-mt-6">
+      {/* GŁÓWNA SEKCJA: KATEGORIE I ROZWIJANE POKOJE */}
+      <section id="apartments" className="max-w-7xl mx-auto px-6 py-28 scroll-mt-6">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
+          <span className="text-xs uppercase tracking-[0.2em] font-bold text-[#D4A373] mb-2 block">Odkryj naszą ofertę</span>
+          <h2 className="text-3xl md:text-5xl font-serif font-bold text-stone-900 mb-4">
             Wybierz rodzaj pokoju
           </h2>
-          <p className="text-stone-600 max-w-xl mx-auto">Mamy dla Ciebie 3 kategorie apartamentów. Rozwiń wybraną, aby zobaczyć 3 konkretne numery pokoi z galeriami zdjęć.</p>
+          <p className="text-stone-600 max-w-xl mx-auto text-sm leading-relaxed">Mamy dla Ciebie 3 kategorie apartamentów. Rozwiń wybraną, aby zobaczyć 3 konkretne numery pokoi z bogatymi galeriami zdjęć.</p>
         </div>
 
         {error && (
@@ -244,19 +240,18 @@ export default function Home() {
         {loading ? (
           <div className="text-center py-20 text-stone-400 font-medium">Ładowanie kategorii...</div>
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-8">
             {mainCategories.map((cat, catIndex) => {
               const isExpanded = expandedIndex === catIndex;
-              // Pierwszy pokój z tej grupy posłuży jako okładka kategorii
               const firstRoomImages = getRoomImages(cat.roomNumbers[0]);
 
               return (
-                <div key={catIndex} className="bg-white rounded-3xl shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300">
+                <div key={catIndex} className="bg-[#FAF9F5] rounded-[2rem] shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300 hover:shadow-md">
                   
                   {/* Nagłówek kategorii */}
-                  <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-stone-50/50">
+                  <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#F3EFEA]/60">
                     <div className="flex items-center gap-6">
-                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-stone-200">
+                      <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-md border border-stone-200/80">
                         <Image src={firstRoomImages[0]} alt={cat.title} fill className="object-cover" />
                       </div>
                       <div>
@@ -273,7 +268,7 @@ export default function Home() {
                       </div>
                       <button 
                         onClick={() => setExpandedIndex(isExpanded ? null : catIndex)}
-                        className="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3.5 rounded-2xl transition shadow-sm text-sm cursor-pointer flex items-center gap-2"
+                        className="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3.5 rounded-2xl transition shadow-md text-sm cursor-pointer flex items-center gap-2"
                       >
                         <span>{isExpanded ? 'Zwiń pokoje' : `Wybierz pokój (pokoje nr ${cat.roomNumbers.join(', ')})`}</span>
                         <span className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>↓</span>
@@ -283,7 +278,7 @@ export default function Home() {
 
                   {/* Rozwijane 3 konkretne numery pokoi */}
                   {isExpanded && (
-                    <div className="p-6 md:p-8 border-t border-stone-100 bg-white">
+                    <div className="p-6 md:p-8 border-t border-stone-200/60 bg-[#FAF9F5]">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-6">
                         Dostępne konkretne pokoje w tej kategorii (3 opcje):
                       </h4>
@@ -294,7 +289,7 @@ export default function Home() {
                           const targetBookingId = getBookingIdForRoom(roomNum);
 
                           return (
-                            <div key={roomNum} className="border border-stone-200/80 rounded-2xl overflow-hidden bg-stone-50/40 flex flex-col justify-between group hover:shadow-md transition">
+                            <div key={roomNum} className="border border-stone-200/80 rounded-2xl overflow-hidden bg-white flex flex-col justify-between group hover:shadow-lg transition">
                               <div 
                                 onClick={() => { setSelectedApartment({ name: `${cat.title} — Pokój nr ${roomNum}`, description: cat.description, price_per_night: cat.price, capacity: cat.capacity, roomNum, images: roomImages, id: targetBookingId }); setActiveImageIndex(0); }}
                                 className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer"
@@ -316,7 +311,7 @@ export default function Home() {
                                   Pokój nr {roomNum}
                                 </h5>
                                 <p className="text-stone-500 text-xs mb-4">Niezależny pokój z pełnym wyposażeniem, aneksem i łazienką.</p>
-                                <div className="flex items-center justify-between pt-3 border-t border-stone-200/60">
+                                <div className="flex items-center justify-between pt-3 border-t border-stone-100">
                                   <span className="font-extrabold text-stone-900 text-sm">{cat.price} zł / doba</span>
                                   <Link 
                                     href={`/book/${targetBookingId}`} 
@@ -340,11 +335,11 @@ export default function Home() {
         )}
       </section>
 
-      {/* Sekcja FAQ */}
-      <section className="bg-white py-24 border-t border-stone-200/60">
+      {/* Sekcja FAQ na ciepłym tle */}
+      <section className="bg-[#F3EFEA] py-28 border-t border-stone-200/60">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-2 block">Wszystko, co warto wiedzieć</span>
+            <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-2 block">Wszystko, co warto wiedzieć</span>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900">Najczęściej zadawane pytania</h2>
           </div>
 
@@ -352,7 +347,7 @@ export default function Home() {
             {faqItems.map((item, index) => {
               const isOpen = openFaq === index;
               return (
-                <div key={index} className="bg-stone-50 rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200">
+                <div key={index} className="bg-[#FAF9F5] rounded-2xl border border-stone-200/80 overflow-hidden transition-all duration-200 shadow-xs">
                   <button
                     onClick={() => toggleFaq(index)}
                     className="w-full p-6 text-left flex justify-between items-center font-bold text-stone-900 focus:outline-none cursor-pointer"
@@ -361,7 +356,7 @@ export default function Home() {
                     <span className={`transform transition-transform duration-200 text-xl text-stone-500 ${isOpen ? 'rotate-180' : ''}`}>↓</span>
                   </button>
                   {isOpen && (
-                    <div className="px-6 pb-6 text-stone-600 text-sm leading-relaxed border-t border-stone-200/40 pt-4">
+                    <div className="px-6 pb-6 text-stone-600 text-sm leading-relaxed border-t border-stone-200/60 pt-4">
                       {item.a}
                     </div>
                   )}
@@ -373,14 +368,14 @@ export default function Home() {
       </section>
 
       {/* Sekcja opinii */}
-      <section className="bg-stone-100/70 py-24 border-t border-stone-200/60">
+      <section className="bg-[#FAF9F5] py-28 border-t border-stone-200/60">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-2 block">Opinie i oceny</span>
+          <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-2 block">Opinie i oceny</span>
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">Zaufanie poparte doświadczeniem</h2>
           <p className="text-stone-600 max-w-xl mx-auto mb-16 text-sm">Sprawdź, jak oceniają nas goście na niezależnych portalach turystycznych.</p>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
+            <div className="bg-white p-10 rounded-[2rem] shadow-md border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-lg">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
                   <Image src="/images/booking.jpg" alt="Booking.com" fill className="object-contain" />
@@ -397,7 +392,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
+            <div className="bg-white p-10 rounded-[2rem] shadow-md border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-lg">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
                   <Image src="/images/google.jpg" alt="Google" fill className="object-contain" />
@@ -417,41 +412,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stopka */}
-      <footer id="footer" className="bg-white border-t border-stone-200 pt-20 pb-12">
+      {/* Elegancka stopka w kolorze kamiennego brązu */}
+      <footer id="footer" className="bg-[#1C1A17] text-stone-300 pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
             <div>
-              <div className="mb-6"><Image src="/logo.png" alt="Puerto Władysławowo" width={180} height={60} className="object-contain h-14 w-auto" /></div>
-              <p className="text-sm text-stone-500 leading-relaxed max-w-sm">
+              <div className="mb-6"><Image src="/logo.png" alt="Puerto Władysławowo" width={180} height={60} className="object-contain h-14 w-auto brightness-0 invert" /></div>
+              <p className="text-sm text-stone-400 leading-relaxed max-w-sm">
                 Apartamenty Puerto to kameralne i luksusowe miejsce stworzone z myślą o Twoim idealnym wypoczynku we Władysławowie. Łączymy nadmorski klimat z najwyższym standardem wykończenia.
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Kontakt</h4>
-              <div className="space-y-4 text-sm text-stone-600">
-                <p className="flex items-center gap-3"><span className="text-stone-400">📞</span> +48 609 668 134</p>
-                <p className="flex items-center gap-3"><span className="text-stone-400">✉️</span> kontakt@puerto-wladyslawowo.pl</p>
-                <p className="flex items-center gap-3"><span className="text-stone-400">📍</span> ul. Krótka 1, Władysławowo</p>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Kontakt</h4>
+              <div className="space-y-4 text-sm text-stone-400">
+                <p className="flex items-center gap-3"><span className="text-[#D4A373]">📞</span> +48 609 668 134</p>
+                <p className="flex items-center gap-3"><span className="text-[#D4A373]">✉️</span> kontakt@puerto-wladyslawowo.pl</p>
+                <p className="flex items-center gap-3"><span className="text-[#D4A373]">📍</span> ul. Krótka 1, Władysławowo</p>
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Nawigacja</h4>
-              <div className="flex flex-col space-y-3 text-sm font-medium text-stone-500">
-                <button onClick={scrollToApartments} className="text-left hover:text-stone-900 transition w-fit cursor-pointer">Wybierz pokój</button>
-                <Link href="/" className="hover:text-stone-900 transition w-fit">Polityka prywatności</Link>
-                <Link href="/" className="hover:text-stone-900 transition w-fit">Regulamin pobytu</Link>
+              <h4 className="font-bold text-white mb-6 uppercase tracking-wider text-sm">Nawigacja</h4>
+              <div className="flex flex-col space-y-3 text-sm font-medium text-stone-400">
+                <button onClick={scrollToApartments} className="text-left hover:text-white transition w-fit cursor-pointer">Wybierz pokój</button>
+                <Link href="/" className="hover:text-white transition w-fit">Polityka prywatności</Link>
+                <Link href="/" className="hover:text-white transition w-fit">Regulamin pobytu</Link>
               </div>
             </div>
           </div>
-          <div className="border-t border-stone-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-400">
+          <div className="border-t border-stone-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-500">
             <p>&copy; {new Date().getFullYear()} Apartamenty Puerto Władysławowo. Wszelkie prawa zastrzeżone.</p>
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               <a href="https://www.facebook.com/profile.php?id=61577936825974" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition">
-                <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-stone-200">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden shadow-sm border border-stone-700">
                   <Image src="/images/facebook.jpg" alt="Facebook" fill className="object-cover" />
                 </div>
-                <span className="text-stone-700 font-medium text-sm">Facebook</span>
+                <span className="text-stone-300 font-medium text-sm">Facebook</span>
               </a>
             </div>
           </div>
@@ -460,11 +455,11 @@ export default function Home() {
 
       {/* Modal z dedykowaną galerią konkretnego pokoju */}
       {selectedApartment && (
-        <div onClick={() => setSelectedApartment(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+        <div onClick={() => setSelectedApartment(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
             <button onClick={() => setSelectedApartment(null)} className="absolute top-5 right-5 bg-stone-100 hover:bg-stone-200 text-stone-900 w-9 h-9 rounded-full flex items-center justify-center font-bold transition z-20 cursor-pointer shadow-sm">✕</button>
 
-            <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-1 block">{selectedApartment.name}</span>
+            <span className="text-xs font-bold tracking-widest uppercase text-[#D4A373] mb-1 block">{selectedApartment.name}</span>
             <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 pr-10">Galeria zdjęć</h2>
 
             <div className="relative h-60 md:h-72 w-full rounded-2xl overflow-hidden bg-stone-100 mb-4 shadow-inner">
@@ -492,7 +487,7 @@ export default function Home() {
                 <span className="text-xl font-bold text-stone-900">{selectedApartment.price_per_night} zł</span>
                 <span className="text-xs text-stone-500 block">za dobę • Do {selectedApartment.capacity} osób</span>
               </div>
-              <Link href={`/book/${selectedApartment.id}`} className="w-full sm:w-auto bg-stone-900 text-white font-medium px-6 py-3 rounded-xl hover:bg-stone-800 transition text-center text-sm shadow-sm">
+              <Link href={`/book/${selectedApartment.id}`} className="w-full sm:w-auto bg-[#D4A373] hover:bg-[#c39263] text-white font-medium px-6 py-3 rounded-xl transition text-center text-sm shadow-sm">
                 Zarezerwuj teraz
               </Link>
             </div>
