@@ -73,6 +73,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     fetchApartmentAndRooms();
   }, [id, defaultGuests]);
 
+  // Sprawdzanie dostępnych numerów pokoi z uwzględnieniem 3 głównych kategorii
   useEffect(() => {
     async function checkAvailableRooms() {
       if (!checkIn || !checkOut || !id) return;
@@ -81,17 +82,20 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       if (!allApts) return;
 
       const aptIndex = allApts.findIndex((a) => a.id === id);
+      
+      // Mapowanie: jeśli to 1. kategoria -> [1, 4, 7], 2. kategoria -> [2, 5, 8], 3. kategoria -> [3, 6, 9]
+      // Jeśli rekordów w bazie jest 9, dopasowujemy modulo lub pozycję
+      const normalizedIndex = aptIndex >= 0 ? aptIndex % 3 : 0;
       const possibleRoomsMap: Record<number, number[]> = {
         0: [1, 4, 7],
         1: [2, 5, 8],
         2: [3, 6, 9]
       };
-      const roomsForThisType = possibleRoomsMap[aptIndex] || [1, 2, 3];
+      const roomsForThisType = possibleRoomsMap[normalizedIndex] || [1, 2, 3];
 
       const { data: existingBookings } = await supabase
         .from('bookings')
-        .select('room_number, check_in, check_out')
-        .eq('apartment_id', id);
+        .select('room_number, check_in, check_out');
 
       const freeRooms = roomsForThisType.filter((roomNum) => {
         const roomBookings = existingBookings?.filter((b) => b.room_number === roomNum) || [];
@@ -225,7 +229,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   if (loading) return <div className="p-20 text-center text-stone-500 font-medium">Ładowanie rezerwacji...</div>;
   if (error || !apartment) return <div className="p-20 text-center text-red-600 font-bold">Nie znaleziono apartamentu.</div>;
 
-  // NOWY EKRAN POTWIERDZENIA (ZAMIAST BILETU)
   if (successMessage) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-stone-100 px-6 py-12">
@@ -275,7 +278,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
           <div className="lg:col-span-5 lg:sticky lg:top-8 space-y-6">
             <div className="relative h-64 md:h-80 w-full rounded-3xl overflow-hidden shadow-lg border border-stone-100">
               <Image 
-                src={apartment.image_url || "/images/apt-1.jpg"} 
+                src={apartment.image_url || "/images/pokoj 1/pokoj 1 (1).jpg"} 
                 alt={apartment.name} 
                 fill 
                 className="object-cover"
