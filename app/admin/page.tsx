@@ -82,7 +82,6 @@ export default function AdminPanel() {
   const handleAddBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Blokada kolizji dla wybranego konkretnego pokoju (1-9)
     const { data: existingBookings } = await supabase
       .from('bookings')
       .select('*')
@@ -128,54 +127,61 @@ export default function AdminPanel() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-stone-100 flex items-center justify-center px-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full text-center border border-stone-200">
-          <h1 className="text-2xl font-serif font-bold text-stone-900 mb-2">Panel Zarządzania</h1>
-          <form onSubmit={handleLogin} className="space-y-4 mt-6">
+      <div className="min-h-screen bg-stone-100 flex items-center justify-center px-4 font-sans">
+        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl max-w-sm w-full text-center border border-stone-200">
+          <div className="w-14 h-14 bg-stone-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 text-xl font-serif">P.</div>
+          <h1 className="text-2xl font-serif font-bold text-stone-900 mb-2">Panel Gospodarza</h1>
+          <p className="text-stone-500 text-xs mb-8">Wprowadź PIN, aby zarządzać rezerwacjami</p>
+          <form onSubmit={handleLogin} className="space-y-4">
             <input 
               type="password" 
-              placeholder="Wpisz 4-cyfrowy PIN" 
+              placeholder="••••" 
               maxLength={4}
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className="w-full border-2 border-stone-200 rounded-2xl p-4 text-center text-xl tracking-widest outline-none focus:border-stone-900"
+              className="w-full border-2 border-stone-100 bg-stone-50 rounded-2xl p-4 text-center text-2xl tracking-[0.5em] outline-none focus:border-stone-900 font-bold"
               required
             />
-            <button type="submit" className="w-full bg-stone-900 text-white font-bold py-4 rounded-2xl hover:bg-stone-800 transition text-sm cursor-pointer">
+            <button type="submit" className="w-full bg-stone-900 text-white font-bold py-4 rounded-2xl hover:bg-stone-800 transition text-sm cursor-pointer shadow-lg">
               Wejdź do panelu
             </button>
           </form>
+          <div className="mt-6">
+            <Link href="/" className="text-xs text-stone-400 hover:text-stone-700">&larr; Wróć na stronę główną</Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 md:p-10">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-6 md:p-12 font-sans">
+      <div className="max-w-7xl mx-auto">
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 bg-white p-6 rounded-3xl shadow-sm border border-stone-200">
+        {/* Górny nagłówek panelu */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 bg-white p-8 rounded-[2rem] shadow-sm border border-stone-200/80">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-stone-400">Panel Gospodarza</span>
-            <h1 className="text-2xl md:text-3xl font-serif font-bold text-stone-900">Zarządzanie (9 pokoi)</h1>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Puerto Władysławowo</span>
+            <h1 className="text-3xl font-serif font-bold text-stone-900">Panel Zarządzania Rezerwacjami</h1>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-[#D4A373] text-white font-bold px-5 py-3 rounded-2xl hover:bg-[#c39263] transition text-sm shadow-sm cursor-pointer"
+              className="bg-[#D4A373] hover:bg-[#c39263] text-white font-bold px-6 py-3.5 rounded-2xl transition text-sm shadow-md cursor-pointer flex items-center gap-2"
             >
-              + Dodaj rezerwację ręcznie
+              <span>+</span> Dodaj rezerwację ręcznie
             </button>
-            <Link href="/" className="bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium px-5 py-3 rounded-2xl transition text-sm">
+            <Link href="/" className="bg-stone-100 hover:bg-stone-200 text-stone-800 font-medium px-6 py-3.5 rounded-2xl transition text-sm">
               Podgląd strony
             </Link>
           </div>
         </div>
 
+        {/* Modal dodawania rezerwacji */}
         {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-stone-100">
-              <h3 className="text-xl font-serif font-bold text-stone-900 mb-6">Dodaj rezerwację ręcznie</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl border border-stone-100 my-auto">
+              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-6">Nowa rezerwacja (telefon / inne)</h3>
               
               <form onSubmit={handleAddBooking} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -184,7 +190,7 @@ export default function AdminPanel() {
                     <select 
                       value={selectedApt} 
                       onChange={(e) => setSelectedApt(e.target.value)}
-                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none"
+                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none font-medium"
                     >
                       {apartments.map((apt) => (
                         <option key={apt.id} value={apt.id}>{apt.name} ({apt.price_per_night} zł)</option>
@@ -192,7 +198,7 @@ export default function AdminPanel() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Numer pokoju</label>
+                    <label className="block text-xs font-bold uppercase text-stone-500 mb-1">Wybierz pokój (1-9)</label>
                     <select 
                       value={selectedRoomNum} 
                       onChange={(e) => setSelectedRoomNum(Number(e.target.value))}
@@ -248,7 +254,7 @@ export default function AdminPanel() {
                       type="date" 
                       value={checkIn} 
                       onChange={(e) => setCheckIn(e.target.value)} 
-                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none" 
+                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none font-medium" 
                       required 
                     />
                   </div>
@@ -258,7 +264,7 @@ export default function AdminPanel() {
                       type="date" 
                       value={checkOut} 
                       onChange={(e) => setCheckOut(e.target.value)} 
-                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none" 
+                      className="w-full border border-stone-200 rounded-xl p-3 text-sm bg-stone-50 outline-none font-medium" 
                       required 
                     />
                   </div>
@@ -289,10 +295,10 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <button type="button" onClick={() => setShowAddModal(false)} className="w-1/2 bg-stone-100 text-stone-700 font-bold py-3 rounded-xl hover:bg-stone-200 transition text-sm cursor-pointer">
+                  <button type="button" onClick={() => setShowAddModal(false)} className="w-1/2 bg-stone-100 text-stone-700 font-bold py-3.5 rounded-xl hover:bg-stone-200 transition text-sm cursor-pointer">
                     Anuluj
                   </button>
-                  <button type="submit" className="w-1/2 bg-stone-900 text-white font-bold py-3 rounded-xl hover:bg-stone-800 transition text-sm cursor-pointer">
+                  <button type="submit" className="w-1/2 bg-stone-900 text-white font-bold py-3.5 rounded-xl hover:bg-stone-800 transition text-sm cursor-pointer shadow-md">
                     Zapisz rezerwację
                   </button>
                 </div>
@@ -301,55 +307,101 @@ export default function AdminPanel() {
           </div>
         )}
 
-        <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
-          <div className="p-6 border-b border-stone-100 flex justify-between items-center">
-            <h2 className="font-serif font-bold text-lg text-stone-900">Wszystkie rezerwacje (z podziałem na numery pokoi)</h2>
-            <span className="text-xs bg-stone-100 px-3 py-1 rounded-full font-bold text-stone-600">Łącznie: {bookings.length}</span>
+        {/* Lista rezerwacji */}
+        <div className="bg-white rounded-[2rem] shadow-sm border border-stone-200/80 overflow-hidden">
+          <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+            <div>
+              <h2 className="font-serif font-bold text-xl text-stone-900">Harmonogram Rezerwacji</h2>
+              <p className="text-xs text-stone-500 mt-0.5">Przeglądaj terminy przyjazdów i wyjazdów gości</p>
+            </div>
+            <span className="text-xs bg-stone-900 text-white px-4 py-2 rounded-full font-bold shadow-sm">
+              Aktywnych rezerwacji: {bookings.length}
+            </span>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-stone-400">Pobieranie rezerwacji...</div>
+            <div className="p-16 text-center text-stone-400 font-medium">Ładowanie rezerwacji...</div>
           ) : bookings.length === 0 ? (
-            <div className="p-16 text-center text-stone-400">Brak rezerwacji w bazie danych.</div>
+            <div className="p-20 text-center text-stone-400">Brak rezerwacji w bazie danych.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-stone-50 text-stone-400 text-xs uppercase tracking-wider border-b border-stone-100">
-                    <th className="p-4 font-semibold">Numer pokoju</th>
-                    <th className="p-4 font-semibold">Typ apartamentu</th>
-                    <th className="p-4 font-semibold">Gość i Kontakt</th>
-                    <th className="p-4 font-semibold">Termin</th>
-                    <th className="p-4 font-semibold">Kwota</th>
-                    <th className="p-4 font-semibold text-right">Akcja</th>
+                    <th className="p-5 font-semibold">Pokój</th>
+                    <th className="p-5 font-semibold">Typ obiektu</th>
+                    <th className="p-5 font-semibold">Gość i Kontakt</th>
+                    <th className="p-5 font-semibold">Termin pobytu (Od — Do)</th>
+                    <th className="p-5 font-semibold">Cena</th>
+                    <th className="p-5 font-semibold text-right">Zarządzaj</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100 text-sm">
-                  {bookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-stone-50/50 transition">
-                      <td className="p-4">
-                        <span className="bg-stone-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl">
-                          Pokój nr {b.room_number || 1}
-                        </span>
-                      </td>
-                      <td className="p-4 font-bold text-stone-900">{b.apartments?.name || 'Apartament'}</td>
-                      <td className="p-4">
-                        <div className="font-semibold text-stone-900">{b.guest_name}</div>
-                        <div className="text-xs text-stone-500">{b.guest_phone}</div>
-                        <div className="text-xs text-stone-400">{b.guest_email}</div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-stone-900 font-medium">{b.check_in}</div>
-                        <div className="text-xs text-stone-400">do {b.check_out}</div>
-                      </td>
-                      <td className="p-4 font-extrabold text-stone-900">{b.total_price} zł</td>
-                      <td className="p-4 text-right">
-                        <button onClick={() => handleDelete(b.id)} className="bg-red-50 hover:bg-red-100 text-red-600 font-medium px-3 py-1.5 rounded-xl text-xs transition cursor-pointer">
-                          Usuń
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {bookings.map((b) => {
+                    // Obliczamy liczbę nocy dla ładnego wyświetlenia
+                    const start = new Date(b.check_in);
+                    const end = new Date(b.check_out);
+                    const nights = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+
+                    return (
+                      <tr key={b.id} className="hover:bg-stone-50/80 transition group">
+                        
+                        {/* Numer pokoju */}
+                        <td className="p-5">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-stone-900 text-white font-bold text-sm shadow-sm">
+                            {b.room_number || 1}
+                          </span>
+                        </td>
+
+                        {/* Typ apartamentu */}
+                        <td className="p-5 font-serif font-bold text-stone-900">
+                          {b.apartments?.name || 'Apartament'}
+                          <span className="block text-xs font-sans font-normal text-stone-400 mt-0.5">{b.guests} {b.guests === 1 ? 'osoba' : 'osoby'}</span>
+                        </td>
+
+                        {/* Dane gościa */}
+                        <td className="p-5">
+                          <div className="font-bold text-stone-900">{b.guest_name}</div>
+                          <div className="text-xs text-[#D4A373] font-medium mt-0.5">📞 {b.guest_phone || 'Brak telefonu'}</div>
+                          <div className="text-xs text-stone-400">{b.guest_email}</div>
+                        </td>
+
+                        {/* Wizualny termin przyjazdu i wyjazdu */}
+                        <td className="p-5">
+                          <div className="flex items-center gap-3 bg-stone-100/70 p-3 rounded-2xl w-fit border border-stone-200/50">
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-emerald-600 block">Zameldowanie</span>
+                              <span className="font-bold text-stone-900 text-xs">🟢 {b.check_in}</span>
+                            </div>
+                            <span className="text-stone-300">→</span>
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-rose-600 block">Wymeldowanie</span>
+                              <span className="font-bold text-stone-900 text-xs">🔴 {b.check_out}</span>
+                            </div>
+                          </div>
+                          <span className="text-[11px] text-stone-400 font-medium block mt-1.5 ml-1">
+                            Całkowity pobyt: <strong className="text-stone-700">{nights} {nights === 1 ? 'noc' : 'noce'}</strong>
+                          </span>
+                        </td>
+
+                        {/* Kwota */}
+                        <td className="p-5">
+                          <span className="font-extrabold text-stone-900 text-base">{b.total_price} zł</span>
+                        </td>
+
+                        {/* Akcja usuwania */}
+                        <td className="p-5 text-right">
+                          <button 
+                            onClick={() => handleDelete(b.id)} 
+                            className="bg-red-50 hover:bg-red-100 text-red-600 font-medium px-4 py-2 rounded-xl text-xs transition cursor-pointer"
+                          >
+                            Usuń rezerwację
+                          </button>
+                        </td>
+
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
