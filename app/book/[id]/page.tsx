@@ -42,11 +42,16 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
 
   const calendarRef = useRef<HTMLDivElement>(null);
 
-  // Ustalamy jakie numery pokoi odpowiadają danemu ID apartamentu z bazy
-  // Przyjmujemy podział: 
-  // Jeśli to ID pierwszego apartamentu -> pokoje 1, 4, 7
-  // Drugiego -> 2, 5, 8
-  // Trzeciego -> 3, 6, 9
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        setIsCalendarOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     async function fetchApartmentAndRooms() {
       const { data, error } = await supabase
@@ -68,17 +73,14 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
     fetchApartmentAndRooms();
   }, [id, defaultGuests]);
 
-  // Sprawdzanie dostępnych numerów pokoi po zmianie dat
   useEffect(() => {
     async function checkAvailableRooms() {
       if (!checkIn || !checkOut || !id) return;
 
-      // Pobieramy wszystkie apartamenty, żeby ustalić mapowanie (które ID to które pokoje)
       const { data: allApts } = await supabase.from('apartments').select('id');
       if (!allApts) return;
 
       const aptIndex = allApts.findIndex((a) => a.id === id);
-      // Mapowanie: indeks 0 -> [1, 4, 7], indeks 1 -> [2, 5, 8], indeks 2 -> [3, 6, 9]
       const possibleRoomsMap: Record<number, number[]> = {
         0: [1, 4, 7],
         1: [2, 5, 8],
@@ -86,13 +88,11 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
       };
       const roomsForThisType = possibleRoomsMap[aptIndex] || [1, 2, 3];
 
-      // Pobieramy istniejące rezerwacje dla tego typu
       const { data: existingBookings } = await supabase
         .from('bookings')
         .select('room_number, check_in, check_out')
         .eq('apartment_id', id);
 
-      // Filtrujemy pokoje, które NIE mają kolizji w wybranym terminie
       const freeRooms = roomsForThisType.filter((roomNum) => {
         const roomBookings = existingBookings?.filter((b) => b.room_number === roomNum) || [];
         const hasConflict = roomBookings.some((b) => {
@@ -225,32 +225,19 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
   if (loading) return <div className="p-20 text-center text-stone-500 font-medium">Ładowanie rezerwacji...</div>;
   if (error || !apartment) return <div className="p-20 text-center text-red-600 font-bold">Nie znaleziono apartamentu.</div>;
 
+  // NOWY EKRAN POTWIERDZENIA (ZAMIAST BILETU)
   if (successMessage) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-stone-100 px-6 py-12">
-        <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full text-center overflow-hidden border border-stone-200">
-          <div className="bg-[#D4A373] py-10 px-8 text-white relative">
-            <div className="w-20 h-20 bg-white/20 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-4xl backdrop-blur-md">✓</div>
-            <h2 className="text-3xl font-serif font-bold mb-2">Zarezerwowane!</h2>
-            <p className="opacity-90 text-sm font-medium">Pokój nr {selectedRoomNumber} jest twój, {guestName}.</p>
-            <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-stone-100 rounded-full"></div>
-            <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-stone-100 rounded-full"></div>
-          </div>
-          <div className="p-8 border-t-2 border-dashed border-stone-200 bg-white">
-            <div className="grid grid-cols-2 gap-4 text-left mb-8">
-              <div>
-                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Termin</p>
-                <p className="text-sm font-bold text-stone-900">{checkIn} <br/> {checkOut}</p>
-              </div>
-              <div>
-                <p className="text-xs text-stone-400 font-bold uppercase mb-1">Numer pokoju</p>
-                <p className="text-sm font-bold text-[#D4A373]">Pokój nr {selectedRoomNumber}</p>
-              </div>
-            </div>
-            <Link href="/" className="block w-full bg-stone-900 text-white font-medium py-4 rounded-2xl hover:bg-stone-800 transition text-sm">
-              Wróć na stronę główną
-            </Link>
-          </div>
+        <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full text-center p-8 md:p-10 border border-stone-200">
+          <div className="w-20 h-20 bg-amber-50 text-[#D4A373] rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-sm border border-amber-100">✓</div>
+          <h2 className="text-3xl font-serif font-bold mb-3 text-stone-900">Dziękujemy!</h2>
+          <p className="text-stone-600 text-sm leading-relaxed mb-8">
+            Twoja rezerwacja została pomyślnie przyjęta do systemu. W najbliższym czasie skontaktujemy się z Tobą w celu potwierdzenia rezerwacji.
+          </p>
+          <Link href="/" className="block w-full bg-stone-900 text-white font-medium py-4 rounded-2xl hover:bg-stone-800 transition text-sm">
+            Wróć na stronę główną
+          </Link>
         </div>
       </main>
     );
@@ -389,7 +376,6 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 )}
               </div>
 
-              {/* WYBÓR KONKRETNEGO NUMERU POKOJU */}
               {checkIn && checkOut && (
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Wybierz wolny pokój</label>
@@ -415,7 +401,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
               )}
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Liczba gości</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Kto przyjedzie?</label>
                 <div className="flex items-center justify-between border-2 border-stone-100 rounded-2xl p-4 bg-stone-50/50">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm font-bold">👤</div>
@@ -465,7 +451,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                 disabled={submitting || availableRooms.length === 0}
                 className="w-full bg-[#D4A373] hover:bg-[#c39263] text-white font-bold py-5 rounded-2xl transition shadow-lg text-base disabled:opacity-40 cursor-pointer flex justify-center items-center gap-2"
               >
-                {submitting ? 'Przetwarzanie...' : 'Rezerwuję i płacę →'}
+                {submitting ? 'Przetwarzanie...' : 'Wyślij zgłoszenie rezerwacji →'}
               </button>
             </form>
           </div>
