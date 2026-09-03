@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [apartments, setApartments] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +21,8 @@ export default function Home() {
   const [selectedApartment, setSelectedApartment] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Stan przechowujący ID obecnie rozwiniętej kategorii
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  // Stan przechowujący indeks obecnie rozwiniętej kategorii (0, 1 lub 2)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
   // Dokładna liczba zdjęć w poszczególnych folderach pokoi (1-9)
   const roomImageCounts: Record<number, number> = {
@@ -37,15 +37,30 @@ export default function Home() {
     9: 8,
   };
 
-  // Precyzyjne mapowanie kategorii z bazy na numery pokoi:
-  // Indeks 0 (np. Apartament Rodzinny) -> Pokoje 1, 4, 7
-  // Indeks 1 (np. Pokój dla Pary Deluxe) -> Pokoje 2, 5, 8
-  // Indeks 2 (np. Studio Compact) -> Pokoje 3, 6, 9
-  const categoryRoomsMap: Record<number, number[]> = {
-    0: [1, 4, 7],
-    1: [2, 5, 8],
-    2: [3, 6, 9],
-  };
+  // 3 główne opcje i przypisane im dokładnie 3 numery pokoi
+  const mainCategories = [
+    {
+      title: "Apartament Rodzinny (4-osobowy)",
+      description: "Przestronny i komfortowy apartament dla 4 osób z pełnym wyposażeniem.",
+      price: 400,
+      capacity: 4,
+      roomNumbers: [1, 4, 7],
+    },
+    {
+      title: "Komfortowy Pokój dla Pary (Deluxe)",
+      description: "Przestronny pokój dla 2 osób o podwyższonym standardzie.",
+      price: 350,
+      capacity: 2,
+      roomNumbers: [2, 5, 8],
+    },
+    {
+      title: "Studio dla Pary (Compact)",
+      description: "Kameralne studio dla 2 osób z wygodnym aneksem kuchennym.",
+      price: 250,
+      capacity: 2,
+      roomNumbers: [3, 6, 9],
+    },
+  ];
 
   const getRoomImages = (roomNumber: number) => {
     const count = roomImageCounts[roomNumber] || 4;
@@ -80,15 +95,12 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
-      // Pobieramy rodzaje z tabeli apartments
+      // Pobieramy rekordy z bazy, żeby mieć poprawne ID do linków rezerwacji (/book/[id])
       const { data: aptData, error: aptError } = await supabase.from('apartments').select('*');
       if (aptError) {
         setError(aptError.message);
       } else {
-        setApartments(aptData || []);
-        if (aptData && aptData.length > 0) {
-          setExpandedCategoryId(aptData[0].id); // Domyślnie rozwijamy pierwszą kategorię
-        }
+        setCategories(aptData || []);
       }
 
       const { data: settingsData, error: settingsError } = await supabase
@@ -111,6 +123,16 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // Znajdź ID z bazy odpowiadające danemu pokoju (lub weź pierwsze dostępne jako fallback)
+  const getBookingIdForRoom = (roomNum: number) => {
+    // W bazie mamy 9 pokoi. Załóżmy, że pierwsze 3 rekordy lub cała tabela pasuje.
+    // Jeśli wolisz, możemy dopasować po indeksie:
+    if (categories.length >= roomNum) {
+      return categories[roomNum - 1].id;
+    }
+    return categories[0]?.id || '';
+  };
+
   const faqItems = [
     {
       q: "W jakich godzinach odbywa się zameldowanie i wymeldowanie?",
@@ -122,7 +144,7 @@ export default function Home() {
     },
     {
       q: "Czy na terenie obiektu dostępny jest parking?",
-      a: "Tak, dla naszych gości przygotowaliśmy bezpieczny i bezpłatny parking na terenie posesji."
+      a: "Tak, dla naszych gości przygotowaliśmy bezpieczny i bezpłatny parking na posesji."
     },
     {
       q: "Czy w obiekcie można zostawić bagaż przed zameldowaniem?",
@@ -204,13 +226,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* GŁÓWNA SEKCJA: KATEGORIE Z ROZWIJANYMI NUMERAMI POKOI */}
+      {/* GŁÓWNA SEKCJA: DOKŁADNIE 3 GŁÓWNE OPCJE Z ROZWIJANYMI 3 POKOJAMI */}
       <section id="apartments" className="max-w-7xl mx-auto px-6 py-24 scroll-mt-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
-            Nasze Apartamenty i Pokoje
+            Wybierz rodzaj pokoju
           </h2>
-          <p className="text-stone-600 max-w-xl mx-auto">Wybierz interesujący Cię rodzaj, rozwiń go i sprawdź dostępne numery pokoi (np. 1, 4, 7).</p>
+          <p className="text-stone-600 max-w-xl mx-auto">Mamy dla Ciebie 3 kategorie apartamentów. Rozwiń wybraną, aby zobaczyć 3 konkretne numery pokoi z galeriami zdjęć.</p>
         </div>
 
         {error && (
@@ -223,57 +245,58 @@ export default function Home() {
           <div className="text-center py-20 text-stone-400 font-medium">Ładowanie kategorii...</div>
         ) : (
           <div className="space-y-10">
-            {apartments?.map((cat, catIndex) => {
-              const isExpanded = expandedCategoryId === cat.id;
-              const roomNumbers = categoryRoomsMap[catIndex] || [1, 2, 3];
-              const firstRoomImages = getRoomImages(roomNumbers[0]);
+            {mainCategories.map((cat, catIndex) => {
+              const isExpanded = expandedIndex === catIndex;
+              // Pierwszy pokój z tej grupy posłuży jako okładka kategorii
+              const firstRoomImages = getRoomImages(cat.roomNumbers[0]);
 
               return (
-                <div key={cat.id} className="bg-white rounded-3xl shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300">
+                <div key={catIndex} className="bg-white rounded-3xl shadow-sm border border-stone-200/80 overflow-hidden transition-all duration-300">
                   
                   {/* Nagłówek kategorii */}
                   <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-stone-50/50">
                     <div className="flex items-center gap-6">
                       <div className="relative w-28 h-28 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm border border-stone-200">
-                        <Image src={firstRoomImages[0]} alt={cat.name} fill className="object-cover" />
+                        <Image src={firstRoomImages[0]} alt={cat.title} fill className="object-cover" />
                       </div>
                       <div>
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Kategoria apartamentu</span>
-                        <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">{cat.name}</h3>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#D4A373] block mb-1">Kategoria główna</span>
+                        <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">{cat.title}</h3>
                         <p className="text-stone-600 text-sm max-w-xl leading-relaxed">{cat.description}</p>
                       </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto justify-between">
                       <div className="text-left md:text-right">
-                        <span className="text-2xl font-bold text-stone-900">{cat.price_per_night} zł</span>
+                        <span className="text-2xl font-bold text-stone-900">{cat.price} zł</span>
                         <span className="text-xs text-stone-500 block">za dobę • Do {cat.capacity} osób</span>
                       </div>
                       <button 
-                        onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
+                        onClick={() => setExpandedIndex(isExpanded ? null : catIndex)}
                         className="bg-stone-900 hover:bg-stone-800 text-white font-medium px-6 py-3.5 rounded-2xl transition shadow-sm text-sm cursor-pointer flex items-center gap-2"
                       >
-                        <span>{isExpanded ? 'Zwiń pokoje' : `Wybierz pokój (pokoje nr ${roomNumbers.join(', ')})`}</span>
+                        <span>{isExpanded ? 'Zwiń pokoje' : `Wybierz pokój (pokoje nr ${cat.roomNumbers.join(', ')})`}</span>
                         <span className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>↓</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Rozwijana lista konkretnych numerów pokoi (np. 1, 4, 7) */}
+                  {/* Rozwijane 3 konkretne numery pokoi */}
                   {isExpanded && (
                     <div className="p-6 md:p-8 border-t border-stone-100 bg-white">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400 mb-6">
-                        Dostępne konkretne numery w tej kategorii:
+                        Dostępne konkretne pokoje w tej kategorii (3 opcje):
                       </h4>
 
                       <div className="grid md:grid-cols-3 gap-6">
-                        {roomNumbers.map((roomNum) => {
+                        {cat.roomNumbers.map((roomNum) => {
                           const roomImages = getRoomImages(roomNum);
+                          const targetBookingId = getBookingIdForRoom(roomNum);
 
                           return (
                             <div key={roomNum} className="border border-stone-200/80 rounded-2xl overflow-hidden bg-stone-50/40 flex flex-col justify-between group hover:shadow-md transition">
                               <div 
-                                onClick={() => { setSelectedApartment({ ...cat, roomNum, images: roomImages }); setActiveImageIndex(0); }}
+                                onClick={() => { setSelectedApartment({ name: `${cat.title} — Pokój nr ${roomNum}`, description: cat.description, price_per_night: cat.price, capacity: cat.capacity, roomNum, images: roomImages, id: targetBookingId }); setActiveImageIndex(0); }}
                                 className="relative h-48 w-full bg-stone-100 overflow-hidden cursor-pointer"
                               >
                                 <Image src={roomImages[0]} alt={`Pokój nr ${roomNum}`} fill className="object-cover group-hover:scale-105 transition duration-500" />
@@ -287,16 +310,16 @@ export default function Home() {
 
                               <div className="p-5">
                                 <h5 
-                                  onClick={() => { setSelectedApartment({ ...cat, roomNum, images: roomImages }); setActiveImageIndex(0); }}
+                                  onClick={() => { setSelectedApartment({ name: `${cat.title} — Pokój nr ${roomNum}`, description: cat.description, price_per_night: cat.price, capacity: cat.capacity, roomNum, images: roomImages, id: targetBookingId }); setActiveImageIndex(0); }}
                                   className="font-serif font-bold text-stone-900 text-base mb-1 hover:text-[#D4A373] transition cursor-pointer"
                                 >
                                   Pokój nr {roomNum}
                                 </h5>
-                                <p className="text-stone-500 text-xs mb-4">Niezależny pokój z pełnym wyposażeniem i łazienką.</p>
+                                <p className="text-stone-500 text-xs mb-4">Niezależny pokój z pełnym wyposażeniem, aneksem i łazienką.</p>
                                 <div className="flex items-center justify-between pt-3 border-t border-stone-200/60">
-                                  <span className="font-extrabold text-stone-900 text-sm">{cat.price_per_night} zł / doba</span>
+                                  <span className="font-extrabold text-stone-900 text-sm">{cat.price} zł / doba</span>
                                   <Link 
-                                    href={`/book/${cat.id}`} 
+                                    href={`/book/${targetBookingId}`} 
                                     className="bg-[#D4A373] hover:bg-[#c39263] text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow-sm"
                                   >
                                     Rezerwuj nr {roomNum}
@@ -441,8 +464,8 @@ export default function Home() {
           <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
             <button onClick={() => setSelectedApartment(null)} className="absolute top-5 right-5 bg-stone-100 hover:bg-stone-200 text-stone-900 w-9 h-9 rounded-full flex items-center justify-center font-bold transition z-20 cursor-pointer shadow-sm">✕</button>
 
-            <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-1 block">Pokój nr {selectedApartment.roomNum}</span>
-            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 pr-10">{selectedApartment.name}</h2>
+            <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-1 block">{selectedApartment.name}</span>
+            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 pr-10">Galeria zdjęć</h2>
 
             <div className="relative h-60 md:h-72 w-full rounded-2xl overflow-hidden bg-stone-100 mb-4 shadow-inner">
               <Image src={selectedApartment.images[activeImageIndex]} alt="Zdjęcie pokoju" fill className="object-cover transition-all duration-300" />
