@@ -112,7 +112,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 relative">
       
-      {/* Baner powitalny z czystym nagłówkiem */}
       <section className="relative h-[80vh] min-h-[550px] flex items-center justify-center text-center px-6">
         <div className="absolute inset-0 bg-stone-900/40 z-10"></div>
         <div className="absolute inset-0">
@@ -143,7 +142,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Elegancka sekcja atutów */}
       <section className="max-w-6xl mx-auto px-6 -mt-12 relative z-30">
         <div className="bg-white rounded-3xl shadow-xl border border-stone-100/80 p-8 md:p-10 grid md:grid-cols-3 gap-8">
           <div className="flex items-start gap-4">
@@ -178,7 +176,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Lista apartamentów */}
       <section id="apartments" className="max-w-6xl mx-auto px-6 py-24 scroll-mt-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mb-4">
@@ -246,7 +243,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sekcja FAQ */}
       <section className="bg-white py-24 border-t border-stone-200/60">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -283,7 +279,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sekcja ocen */}
       <section className="bg-stone-100/70 py-24 border-t border-stone-200/60">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-2 block">Opinie i oceny</span>
@@ -291,7 +286,6 @@ export default function Home() {
           <p className="text-stone-600 max-w-xl mx-auto mb-16 text-sm">Sprawdź, jak oceniają nas goście na niezależnych portalach turystycznych.</p>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Kafel Booking.com */}
             <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
@@ -310,7 +304,7 @@ export default function Home() {
                 <p className="text-stone-600 text-sm mb-6">Ocena „Wyjątkowy” przyznana przez zweryfikowanych wczasowiczów.</p>
               </div>
               <a 
-                href="https://www.booking.com/hotel/pl/puerto-wladyslawowo.pl.html" 
+                href="https://www.booking.com/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-blue-900 text-white font-medium py-3.5 rounded-2xl hover:bg-blue-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
@@ -320,7 +314,6 @@ export default function Home() {
               </a>
             </div>
 
-            {/* Kafel Google */}
             <div className="bg-white p-10 rounded-3xl shadow-sm border border-stone-200/60 flex flex-col items-center justify-between transition hover:shadow-md">
               <div className="w-full flex flex-col items-center">
                 <div className="h-12 relative w-36 mb-4">
@@ -339,7 +332,7 @@ export default function Home() {
                 <p className="text-stone-600 text-sm mb-6">Zobacz realne oceny oraz wizytówkę naszego obiektu w Google.</p>
               </div>
               <a 
-                href="https://www.google.com/maps/place/Puerto+W%C5%82adys%C5%82awowo/@54.7986906,18.3888293,17z/data=!4m17!1m5!8m4!1e1!2s112377943502415156667!3m1!1e1!3m10!1s0x46fdb3004ca818bb:0x80990370f55ffc13!5m2!4m1!1i2!8m2!3d54.7986875!4d18.3914042!9m1!1b1!16s%2Fg%2F11xn94lj11?entry=ttu&g_ep=EgoyMDI2MDgzMS4wIKXMDSoASAFQAw%3D%3D" 
+                href="https://www.google.com/maps" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full bg-stone-900 text-white font-medium py-3.5 rounded-2xl hover:bg-stone-800 transition text-sm shadow-sm flex items-center justify-center gap-2"
@@ -352,12 +345,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ROZBUDOWANA STOPKA (KONTAKT I O NAS) */}
+      {/* ROZBUDOWANA STOPKA */}
       <footer id="footer" className="bg-white border-t border-stone-200 pt-20 pb-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
-            
-            {/* O Nas */}
             <div>
               <span className="font-serif text-3xl font-bold text-stone-900 block mb-6">Puerto.</span>
               <p className="text-sm text-stone-500 leading-relaxed max-w-sm">
@@ -365,23 +356,21 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Szybki kontakt */}
             <div>
               <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Kontakt</h4>
               <div className="space-y-4 text-sm text-stone-600">
                 <p className="flex items-center gap-3">
-                  <span className="text-stone-400">📞</span> +48 123 456 789
+                  <span className="text-stone-400">📞</span> +48 609 668 134
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-stone-400">✉️</span> kontakt@puerto.pl
+                  <span className="text-stone-400">✉️</span> kontakt@puerto-wladyslawowo.pl
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-stone-400">📍</span> ul. Morska 12, Władysławowo
+                  <span className="text-stone-400">📍</span> ul. Krótka 1, Władysławowo
                 </p>
               </div>
             </div>
 
-            {/* Przydatne linki */}
             <div>
               <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-wider text-sm">Nawigacja</h4>
               <div className="flex flex-col space-y-3 text-sm font-medium text-stone-500">
@@ -390,7 +379,6 @@ export default function Home() {
                 <Link href="/" className="hover:text-stone-900 transition w-fit">Regulamin pobytu</Link>
               </div>
             </div>
-
           </div>
           
           <div className="border-t border-stone-100 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-stone-400">
@@ -413,7 +401,6 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()} 
             className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
           >
-            {/* Przycisk X */}
             <button 
               onClick={() => setSelectedApartment(null)}
               className="absolute top-5 right-5 bg-stone-100 hover:bg-stone-200 text-stone-900 w-9 h-9 rounded-full flex items-center justify-center font-bold transition z-20 cursor-pointer shadow-sm"
@@ -422,11 +409,9 @@ export default function Home() {
               ✕
             </button>
 
-            {/* Tytuł */}
             <span className="text-xs font-bold tracking-widest uppercase text-stone-500 mb-1 block">Puerto Władysławowo</span>
             <h2 className="text-2xl font-serif font-bold text-stone-900 mb-4 pr-10">{selectedApartment.name}</h2>
 
-            {/* Galeria Zdjęć */}
             <div className="relative h-60 md:h-72 w-full rounded-2xl overflow-hidden bg-stone-100 mb-4 shadow-inner">
               <Image 
                 src={apartmentImages[activeImageIndex]} 
@@ -434,8 +419,6 @@ export default function Home() {
                 fill 
                 className="object-cover transition-all duration-300" 
               />
-
-              {/* Strzałki nawigacyjne */}
               <button 
                 onClick={() => setActiveImageIndex((prev) => (prev === 0 ? apartmentImages.length - 1 : prev - 1))}
                 className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-stone-900 w-9 h-9 rounded-full flex items-center justify-center shadow-md font-bold transition cursor-pointer"
@@ -450,7 +433,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Miniaturki */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
               {apartmentImages.map((img, idx) => (
                 <div 
@@ -463,7 +445,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Opis i szczegóły */}
             <p className="text-stone-600 text-sm leading-relaxed mb-6">{selectedApartment.description}</p>
 
             <div className="flex flex-col sm:flex-row justify-between items-center bg-stone-50 p-5 rounded-2xl border border-stone-100 gap-4">
